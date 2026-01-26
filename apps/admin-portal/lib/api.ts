@@ -1,0 +1,105 @@
+// API base URL - adjust this based on your environment
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
+// Type definitions for API requests
+export interface CategoryData {
+  name: string;
+  description?: string;
+  image?: string;
+  isActive?: boolean;
+  displayOrder?: number;
+}
+
+export interface SubcategoryData {
+  name: string;
+  category: string;
+  description?: string;
+  image?: string;
+  isActive?: boolean;
+  displayOrder?: number;
+}
+
+export interface ProductData {
+  name: string;
+  category: string;
+  subcategory: string;
+  description?: string;
+  shortDescription?: string;
+  images?: string[];
+  price: number;
+  compareAtPrice?: number;
+  sku?: string;
+  stock?: number;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  displayOrder?: number;
+  metadata?: Record<string, unknown>;
+}
+
+export const api = {
+  categories: {
+    getAll: () => fetch(`${API_BASE_URL}/api/categories`).then(res => res.json()),
+    getById: (id: string) => fetch(`${API_BASE_URL}/api/categories/${id}`).then(res => res.json()),
+    create: (data: CategoryData) => fetch(`${API_BASE_URL}/api/categories`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(res => res.json()),
+    update: (id: string, data: CategoryData) => fetch(`${API_BASE_URL}/api/categories/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(res => res.json()),
+    delete: (id: string) => fetch(`${API_BASE_URL}/api/categories/${id}`, {
+      method: 'DELETE',
+    }).then(res => res.json()),
+  },
+  subcategories: {
+    getAll: (categoryId?: string) => {
+      const url = categoryId 
+        ? `${API_BASE_URL}/api/subcategories?categoryId=${categoryId}`
+        : `${API_BASE_URL}/api/subcategories`;
+      return fetch(url).then(res => res.json());
+    },
+    getById: (id: string) => fetch(`${API_BASE_URL}/api/subcategories/${id}`).then(res => res.json()),
+    create: (data: SubcategoryData) => fetch(`${API_BASE_URL}/api/subcategories`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(res => res.json()),
+    update: (id: string, data: SubcategoryData) => fetch(`${API_BASE_URL}/api/subcategories/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(res => res.json()),
+    delete: (id: string) => fetch(`${API_BASE_URL}/api/subcategories/${id}`, {
+      method: 'DELETE',
+    }).then(res => res.json()),
+  },
+  products: {
+    getAll: (categoryId?: string, subcategoryId?: string) => {
+      const params = new URLSearchParams();
+      if (categoryId) params.append('categoryId', categoryId);
+      if (subcategoryId) params.append('subcategoryId', subcategoryId);
+      const query = params.toString();
+      const url = query 
+        ? `${API_BASE_URL}/api/products?${query}`
+        : `${API_BASE_URL}/api/products`;
+      return fetch(url).then(res => res.json());
+    },
+    getById: (id: string) => fetch(`${API_BASE_URL}/api/products/${id}`).then(res => res.json()),
+    create: (data: ProductData) => fetch(`${API_BASE_URL}/api/products`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(res => res.json()),
+    update: (id: string, data: ProductData) => fetch(`${API_BASE_URL}/api/products/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(res => res.json()),
+    delete: (id: string) => fetch(`${API_BASE_URL}/api/products/${id}`, {
+      method: 'DELETE',
+    }).then(res => res.json()),
+  },
+};

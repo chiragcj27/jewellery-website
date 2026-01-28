@@ -48,7 +48,8 @@ export default function ProductsPage() {
     subcategory: '',
     description: '',
     shortDescription: '',
-    images: '',
+    images: [] as string[],
+    imageAssetIds: [] as string[],
     price: '',
     compareAtPrice: '',
     sku: '',
@@ -57,6 +58,8 @@ export default function ProductsPage() {
     isFeatured: false,
     displayOrder: 0,
   });
+  const [imagesUploading, setImagesUploading] = useState(false);
+  const [imagesError, setImagesError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCategories();
@@ -116,11 +119,20 @@ export default function ProductsPage() {
 
     try {
       const productData = {
-        ...formData,
+        name: formData.name,
+        category: formData.category,
+        subcategory: formData.subcategory,
+        description: formData.description || undefined,
+        shortDescription: formData.shortDescription || undefined,
+        images: formData.images,
+        imageAssetIds: formData.imageAssetIds.length ? formData.imageAssetIds : undefined,
         price: parseFloat(formData.price),
         compareAtPrice: formData.compareAtPrice ? parseFloat(formData.compareAtPrice) : undefined,
-        stock: formData.stock ? parseInt(formData.stock) : 0,
-        images: formData.images ? formData.images.split(',').map(img => img.trim()) : [],
+        sku: formData.sku || undefined,
+        stock: formData.stock ? parseInt(formData.stock, 10) : 0,
+        isActive: formData.isActive,
+        isFeatured: formData.isFeatured,
+        displayOrder: formData.displayOrder,
       };
 
       const result = editingProduct
@@ -141,20 +153,21 @@ export default function ProductsPage() {
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
-    const categoryId = typeof product.category === 'object' 
-      ? product.category._id 
+    const categoryId = typeof product.category === 'object'
+      ? product.category._id
       : product.category;
-    const subcategoryId = typeof product.subcategory === 'object' 
-      ? product.subcategory._id 
+    const subcategoryId = typeof product.subcategory === 'object'
+      ? product.subcategory._id
       : product.subcategory;
-    
+
     setFormData({
       name: product.name,
       category: categoryId,
       subcategory: subcategoryId,
       description: product.description || '',
       shortDescription: product.shortDescription || '',
-      images: product.images.join(', '),
+      images: product.images || [],
+      imageAssetIds: [],
       price: product.price.toString(),
       compareAtPrice: product.compareAtPrice?.toString() || '',
       sku: product.sku || '',
@@ -163,6 +176,7 @@ export default function ProductsPage() {
       isFeatured: product.isFeatured,
       displayOrder: product.displayOrder,
     });
+    setImagesError(null);
     setShowForm(true);
     if (categoryId) {
       fetchSubcategories(categoryId);
@@ -192,7 +206,8 @@ export default function ProductsPage() {
       subcategory: '',
       description: '',
       shortDescription: '',
-      images: '',
+      images: [],
+      imageAssetIds: [],
       price: '',
       compareAtPrice: '',
       sku: '',
@@ -204,6 +219,49 @@ export default function ProductsPage() {
     setEditingProduct(null);
     setShowForm(false);
     setSubcategories([]);
+    setImagesError(null);
+  };
+
+  const handleImageFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    if (files.length === 0) return;
+    const allowed = /^image\/(jpeg|png|gif|webp)$/i;
+    const toUpload = files.filter((f) => allowed.test(f.type));
+    if (toUpload.length !== files.length) {
+      setImagesError('Only JPEG, PNG, GIF, and WebP are allowed.');
+      return;
+    }
+    setImagesError(null);
+    setImagesUploading(true);
+    const newUrls: string[] = [];
+    const newIds: string[] = [];
+    for (const file of toUpload) {
+      try {
+        const result = await api.assets.upload(file);
+        if (result.success && result.data) {
+          newUrls.push(result.data.url);
+          newIds.push(result.data.assetId);
+        }
+      } catch {
+        setImagesError('Upload failed');
+        setImagesUploading(false);
+        e.target.value = '';
+        return;
+      }
+    }
+    setFormData({
+      ...formData,
+      images: [...formData.images, ...newUrls],
+      imageAssetIds: [...formData.imageAssetIds, ...newIds],
+    });
+    setImagesUploading(false);
+    e.target.value = '';
+  };
+
+  const removeProductImage = (index: number) => {
+    const urls = formData.images.filter((_, i) => i !== index);
+    const ids = formData.imageAssetIds.filter((_, i) => i !== index);
+    setFormData({ ...formData, images: urls, imageAssetIds: ids });
   };
 
   if (loading) {
@@ -375,15 +433,43 @@ export default function ProductsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Images (comma-separated URLs)
+                  Images
                 </label>
                 <input
-                  type="text"
-                  value={formData.images}
-                  onChange={(e) => setFormData({ ...formData, images: e.target.value })}
-                  placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  multiple
+                  onChange={handleImageFiles}
+                  disabled={imagesUploading}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700"
                 />
+                {imagesUploading && (
+                  <p className="mt-1 text-sm text-gray-500">Uploading…</p>
+                )}
+                {imagesError && (
+                  <p className="mt-1 text-sm text-red-600">{imagesError}</p>
+                )}
+                {formData.images.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {formData.images.map((url, i) => (
+                      <div key={i} className="relative group">
+                        <img
+                          src={url}
+                          alt=""
+                          className="h-16 w-16 object-cover rounded border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeProductImage(i)}
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs leading-none opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          aria-label="Remove"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="flex gap-4">
                 <label className="flex items-center">

@@ -23,9 +23,12 @@ export default function CategoriesPage() {
     name: '',
     description: '',
     image: '',
+    imageAssetId: '',
     isActive: true,
     displayOrder: 0,
   });
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCategories();
@@ -47,9 +50,17 @@ export default function CategoriesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        image: formData.image || undefined,
+        imageAssetId: formData.imageAssetId || undefined,
+        isActive: formData.isActive,
+        displayOrder: formData.displayOrder,
+      };
       const result = editingCategory
-        ? await api.categories.update(editingCategory._id, formData)
-        : await api.categories.create(formData);
+        ? await api.categories.update(editingCategory._id, payload)
+        : await api.categories.create(payload);
 
       if (result.success) {
         await fetchCategories();
@@ -69,9 +80,11 @@ export default function CategoriesPage() {
       name: category.name,
       description: category.description || '',
       image: category.image || '',
+      imageAssetId: '',
       isActive: category.isActive,
       displayOrder: category.displayOrder,
     });
+    setImageError(null);
     setShowForm(true);
   };
 
@@ -96,11 +109,41 @@ export default function CategoriesPage() {
       name: '',
       description: '',
       image: '',
+      imageAssetId: '',
       isActive: true,
       displayOrder: 0,
     });
     setEditingCategory(null);
     setShowForm(false);
+    setImageError(null);
+  };
+
+  const handleImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!/^image\/(jpeg|png|gif|webp)$/i.test(file.type)) {
+      setImageError('Only JPEG, PNG, GIF, and WebP are allowed.');
+      return;
+    }
+    setImageError(null);
+    setImageUploading(true);
+    try {
+      const result = await api.assets.upload(file);
+      if (result.success && result.data) {
+        setFormData({
+          ...formData,
+          image: result.data.url,
+          imageAssetId: result.data.assetId,
+        });
+      } else {
+        setImageError(result.error || 'Upload failed');
+      }
+    } catch (err) {
+      setImageError('Upload failed');
+    } finally {
+      setImageUploading(false);
+      e.target.value = '';
+    }
   };
 
   if (loading) {
@@ -160,14 +203,37 @@ export default function CategoriesPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Image URL
+                  Image
                 </label>
                 <input
-                  type="url"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  onChange={handleImageFile}
+                  disabled={imageUploading}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700"
                 />
+                {imageUploading && (
+                  <p className="mt-1 text-sm text-gray-500">Uploading…</p>
+                )}
+                {imageError && (
+                  <p className="mt-1 text-sm text-red-600">{imageError}</p>
+                )}
+                {formData.image && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <img
+                      src={formData.image}
+                      alt="Preview"
+                      className="h-16 w-16 object-cover rounded border"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, image: '', imageAssetId: '' })}
+                      className="text-sm text-red-600 hover:text-red-800"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="flex gap-4">
                 <div className="flex-1">

@@ -24,11 +24,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
-  );
+      <head>
+      <style> 
+  @import url(&quot;https://fonts.googleapis.com/css2?family=Belleza&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap&quot;);
+      </style>
+    </head>
+    <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      {children}
+    </body>
+  </html>
+);
+
 }

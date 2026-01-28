@@ -26,6 +26,7 @@ export interface ProductData {
   description?: string;
   shortDescription?: string;
   images?: string[];
+  imageAssetIds?: string[];
   price: number;
   compareAtPrice?: number;
   sku?: string;
@@ -37,15 +38,25 @@ export interface ProductData {
 }
 
 export const api = {
+  assets: {
+    upload: (file: File) => {
+      const form = new FormData();
+      form.append('file', file);
+      return fetch(`${API_BASE_URL}/api/assets/upload`, {
+        method: 'POST',
+        body: form,
+      }).then((res) => res.json());
+    },
+  },
   categories: {
     getAll: () => fetch(`${API_BASE_URL}/api/categories`).then(res => res.json()),
     getById: (id: string) => fetch(`${API_BASE_URL}/api/categories/${id}`).then(res => res.json()),
-    create: (data: CategoryData) => fetch(`${API_BASE_URL}/api/categories`, {
+    create: (data: CategoryData & { imageAssetId?: string }) => fetch(`${API_BASE_URL}/api/categories`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     }).then(res => res.json()),
-    update: (id: string, data: CategoryData) => fetch(`${API_BASE_URL}/api/categories/${id}`, {
+    update: (id: string, data: CategoryData & { imageAssetId?: string }) => fetch(`${API_BASE_URL}/api/categories/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -62,12 +73,12 @@ export const api = {
       return fetch(url).then(res => res.json());
     },
     getById: (id: string) => fetch(`${API_BASE_URL}/api/subcategories/${id}`).then(res => res.json()),
-    create: (data: SubcategoryData) => fetch(`${API_BASE_URL}/api/subcategories`, {
+    create: (data: SubcategoryData & { imageAssetId?: string }) => fetch(`${API_BASE_URL}/api/subcategories`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     }).then(res => res.json()),
-    update: (id: string, data: SubcategoryData) => fetch(`${API_BASE_URL}/api/subcategories/${id}`, {
+    update: (id: string, data: SubcategoryData & { imageAssetId?: string }) => fetch(`${API_BASE_URL}/api/subcategories/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),

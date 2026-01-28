@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ebe9df;
+  --background: #f5f0e6;
   --foreground: #171717;
 }
 
@@ -15,5 +15,27 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Glacial", sans-serif;
+}
+
+.belleza-regular {
+  font-family: "Belleza", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+
+.rubik-regular {
+  font-family: "Rubik", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face{
+  font-family: 'Glacial';
+  src: url('/fonts/GlacialIndifference-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }

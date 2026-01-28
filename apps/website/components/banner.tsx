@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 interface Slide {
   id: number;
-  color: string;
+  image: string;
   title: string;
   subtitle: string;
 }
@@ -12,25 +13,25 @@ interface Slide {
 const slides: Slide[] = [
   {
     id: 1,
-    color: "#D4AF37", // Gold
+    image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&q=85",
     title: "Golden Orbs",
     subtitle: "Collection",
   },
   {
     id: 2,
-    color: "#C0C0C0", // Silver
+    image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=1920&q=85",
     title: "Silver Elegance",
     subtitle: "Collection",
   },
   {
     id: 3,
-    color: "#FFD700", // Bright Gold
+    image: "/banner.avif",
     title: "Luxury Collection",
     subtitle: "New Arrivals",
   },
   {
     id: 4,
-    color: "#E8E8E8", // Platinum
+    image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=1920&q=85",
     title: "Platinum Dreams",
     subtitle: "Exclusive",
   },
@@ -79,33 +80,32 @@ export default function Banner() {
           <div
             key={slide.id}
             className="min-w-full h-full relative flex items-center justify-center"
-            style={{ backgroundColor: slide.color }}
           >
+            {/* Background image */}
+            <Image
+              src={slide.image}
+              alt=""
+              fill
+              className="object-cover"
+              sizes="100vw"
+              priority={slide.id === 1}
+            />
+            {/* Dark overlay for text legibility */}
+            <div
+              className="absolute inset-0 bg-black/40"
+              aria-hidden
+            />
             {/* Content Overlay */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center z-10">
-                <h2 className="text-6xl md:text-8xl font-serif mb-4 text-white drop-shadow-lg">
+                {/* <h2 className="text-6xl md:text-8xl font-serif mb-4 text-white drop-shadow-lg">
                   {slide.title}
                 </h2>
                 <p className="text-xl md:text-2xl text-white/90 mb-8">
                   {slide.subtitle}
-                </p>
-                <a
-                  href="#"
-                  className="text-white underline text-lg hover:opacity-80 transition-opacity"
-                >
-                  Explore Now
-                </a>
+                </p> */}
               </div>
             </div>
-
-            {/* Placeholder gradient overlay for visual interest */}
-            <div
-              className="absolute inset-0 opacity-20"
-              style={{
-                background: `linear-gradient(135deg, ${slide.color} 0%, rgba(0,0,0,0.3) 100%)`,
-              }}
-            />
           </div>
         ))}
       </div>

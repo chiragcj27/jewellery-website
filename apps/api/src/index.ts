@@ -1,9 +1,11 @@
+import 'dotenv/config';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import connectToDatabase from '@jewellery-website/db';
 import categoriesRouter from './routes/categories';
 import subcategoriesRouter from './routes/subcategories';
 import productsRouter from './routes/products';
+import assetsRouter from './routes/assets';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -26,6 +28,7 @@ app.get('/health', (_req: Request, res: Response) => {
 app.use('/api/categories', categoriesRouter);
 app.use('/api/subcategories', subcategoriesRouter);
 app.use('/api/products', productsRouter);
+app.use('/api/assets', assetsRouter);
 
 // Start server with database connection
 async function startServer() {

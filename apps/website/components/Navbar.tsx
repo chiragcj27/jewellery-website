@@ -12,7 +12,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between gap-4">
           {/* Brand Logo */}
           <div className="shrink-0">
-            <h1 className="text-2xl font-bold text-black">LOREUM</h1>
+            <h1 className="text-5xl font-bold text-black belleza-regular">ZIVARA</h1>
           </div>
 
           {/* Search Bar */}
@@ -123,30 +123,17 @@ export default function Navbar() {
       <div className="border-t border-gray-200">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-center gap-8 flex-wrap">
-            <NavLink href="/new-arrivals">New Arrivals</NavLink>
-            <NavLink href="/best-seller">Best Seller</NavLink>
-            <NavLink href="/fine-silver">Fine Silver</NavLink>
-            
-            {/* 9KT Fine Gold with Luxe Label */}
-            <div className="relative">
-              <span className="absolute -top-5 left-0 bg-yellow-500 text-white text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap">
-                Luxe
-              </span>
-              <NavLink href="/9kt-fine-gold">9KT Fine Gold</NavLink>
-            </div>
-
-            {/* Emily In Paris with à la mode Label */}
-            <div className="relative">
-              <span className="absolute -top-5 left-0 bg-blue-400 text-white text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap">
-                à la mode
-              </span>
-              <NavLink href="/emily-in-paris">Emily In Paris</NavLink>
-            </div>
-
-            <NavLink href="/shraddhas-favourite">Shraddha&apos;s Favourite</NavLink>
-            <NavLink href="/demi-fine-jewellery">Demi-fine Jewellery</NavLink>
-            <NavLink href="/gifting">Gifting</NavLink>
-            <NavLink href="/about-us">About Us</NavLink>
+            <NavLink href="/22kt-ready"><span className ="text-[16px] font-semibold ">22KT Ready</span></NavLink>
+            <NavLink href="/18kt-ready"><span className ="text-[16px] font-semibold ">18KT Ready</span></NavLink>
+            <NavLink href="/9kt-ready"><span className ="text-[16px] font-semibold ">9KT Ready</span></NavLink>
+            <NavLink href="/22kt-order"><span className ="text-[16px] font-semibold ">22KT Order</span></NavLink>
+            <NavLink href="/18kt-order"><span className ="text-[16px] font-semibold ">18KT Order</span></NavLink>
+            <NavLink href="/20kt-order"><span className ="text-[16px] font-semibold ">20KT Order</span></NavLink>
+            <NavLink href="/14kt-9kt-order"><span className ="text-[16px] font-semibold ">14KT &amp; 9KT Order</span></NavLink>
+            <NavLink href="/silver-ready"><span className ="text-[16px] font-semibold ">Silver Ready</span></NavLink>
+            <NavLink href="/platinum-order"><span className ="text-[16px] font-semibold ">Platinum Order</span></NavLink>
+            <NavLink href="/lab-grown-order"><span className ="text-[16px] font-semibold ">Lab Grown Order</span></NavLink>
+            <NavLink href="/coins"><span className ="text-[16px] font-semibold ">Coins</span></NavLink>
           </div>
         </div>
       </div>

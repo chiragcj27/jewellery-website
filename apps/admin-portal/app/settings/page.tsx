@@ -11,6 +11,8 @@ interface SiteSettings {
   updatedAt: string;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
 export default function SettingsPage() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,7 @@ export default function SettingsPage() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('http://localhost:4000/api/site-settings');
+      const response = await fetch(`${API_BASE_URL}/api/site-settings`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch settings');
@@ -59,7 +61,7 @@ export default function SettingsPage() {
       setError(null);
       setSuccessMessage(null);
 
-      const response = await fetch('http://localhost:4000/api/site-settings', {
+      const response = await fetch(`${API_BASE_URL}/api/site-settings`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -187,7 +189,7 @@ export default function SettingsPage() {
               />
               <p className="mt-2 text-sm text-gray-500">
                 If provided, the pre-header text will be clickable and link to this URL. 
-                Leave empty if you don't want the text to be clickable.
+                Leave empty if you don&apos;t want the text to be clickable.
               </p>
             </div>
 

@@ -23,6 +23,8 @@ interface BannerApiResponse {
   updatedAt: string;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
 // Default slides shown when no banners are uploaded
 const defaultSlides: Slide[] = [
   {
@@ -61,7 +63,7 @@ export default function Banner() {
   useEffect(() => {
     const fetchBanners = async () => {
       try {
-        const response = await fetch('http://localhost:4000/api/banners?active=true');
+        const response = await fetch(`${API_BASE_URL}/api/banners?active=true`);
         if (response.ok) {
           const data: BannerApiResponse[] = await response.json();
           

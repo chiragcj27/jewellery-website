@@ -7,6 +7,8 @@ interface SiteSettings {
   preHeaderLink?: string;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
 export default function PreHeader() {
   const [settings, setSettings] = useState<SiteSettings>({
     preHeaderText: '✨ Free shipping on orders over $150',
@@ -17,7 +19,7 @@ export default function PreHeader() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch('http://localhost:4000/api/site-settings');
+        const response = await fetch(`${API_BASE_URL}/api/site-settings`);
         if (response.ok) {
           const data = await response.json();
           setSettings({

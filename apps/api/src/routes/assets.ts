@@ -32,4 +32,7 @@ router.post('/upload', (req: Request, res: Response): void => {
   });
 });
 
+router.get('/', assetsController.getAll);
+router.delete('/:id', assetsController.deleteAsset);
+
 export default router;

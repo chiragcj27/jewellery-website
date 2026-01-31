@@ -2,15 +2,29 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 interface Slide {
-  id: number;
+  id: string | number;
   image: string;
-  title: string;
-  subtitle: string;
+  title?: string;
+  subtitle?: string;
+  link?: string;
 }
 
-const slides: Slide[] = [
+interface BannerApiResponse {
+  _id: string;
+  image: string;
+  link?: string;
+  title?: string;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Default slides shown when no banners are uploaded
+const defaultSlides: Slide[] = [
   {
     id: 1,
     image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&q=85",
@@ -38,19 +52,51 @@ const slides: Slide[] = [
 ];
 
 export default function Banner() {
+  const [slides, setSlides] = useState<Slide[]>(defaultSlides);
+  const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
+  // Fetch banners from API
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/api/banners?active=true');
+        if (response.ok) {
+          const data: BannerApiResponse[] = await response.json();
+          
+          // If we have active banners, use them; otherwise use defaults
+          if (data && data.length > 0) {
+            const formattedSlides: Slide[] = data.map((banner: BannerApiResponse) => ({
+              id: banner._id,
+              image: banner.image,
+              title: banner.title || '',
+              link: banner.link || '',
+            }));
+            setSlides(formattedSlides);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching banners:', error);
+        // Keep default slides if fetch fails
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBanners();
+  }, []);
+
   // Auto-scroll functionality
   useEffect(() => {
-    if (!isAutoPlaying) return;
+    if (!isAutoPlaying || loading) return;
 
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 10000); // 10 seconds
 
     return () => clearInterval(interval);
-  }, [isAutoPlaying]);
+  }, [isAutoPlaying, loading, slides.length]);
 
   const goToSlide = (index: number) => {
     setCurrentSlide(index);
@@ -67,6 +113,16 @@ export default function Banner() {
     goToSlide((currentSlide + 1) % slides.length);
   };
 
+  if (loading) {
+    return (
+      <div className="relative w-full h-[600px] overflow-hidden bg-gray-200 animate-pulse">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-gray-400">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-[600px] overflow-hidden">
       {/* Slides Container */}
@@ -76,38 +132,58 @@ export default function Banner() {
           transform: `translateX(-${currentSlide * 100}%)`,
         }}
       >
-        {slides.map((slide) => (
-          <div
-            key={slide.id}
-            className="min-w-full h-full relative flex items-center justify-center"
-          >
-            {/* Background image */}
-            <Image
-              src={slide.image}
-              alt=""
-              fill
-              className="object-cover"
-              sizes="100vw"
-              priority={slide.id === 1}
-            />
-            {/* Dark overlay for text legibility */}
+        {slides.map((slide, index) => {
+          const SlideContent = (
             <div
-              className="absolute inset-0 bg-black/40"
-              aria-hidden
-            />
-            {/* Content Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center z-10">
-                {/* <h2 className="text-6xl md:text-8xl font-serif mb-4 text-white drop-shadow-lg">
-                  {slide.title}
-                </h2>
-                <p className="text-xl md:text-2xl text-white/90 mb-8">
-                  {slide.subtitle}
-                </p> */}
+              className="min-w-full h-full relative flex items-center justify-center"
+            >
+              {/* Background image */}
+              <Image
+                src={slide.image}
+                alt={slide.title || 'Banner'}
+                fill
+                className="object-cover"
+                sizes="100vw"
+                priority={index === 0}
+              />
+              {/* Dark overlay for text legibility */}
+              <div
+                className="absolute inset-0 bg-black/40"
+                aria-hidden
+              />
+              {/* Content Overlay */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center z-10">
+                  {/* Optional: Show title/subtitle if needed
+                  {slide.title && (
+                    <h2 className="text-6xl md:text-8xl font-serif mb-4 text-white drop-shadow-lg">
+                      {slide.title}
+                    </h2>
+                  )}
+                  {slide.subtitle && (
+                    <p className="text-xl md:text-2xl text-white/90 mb-8">
+                      {slide.subtitle}
+                    </p>
+                  )} */}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+
+          return slide.link ? (
+            <Link
+              key={slide.id}
+              href={slide.link}
+              className="min-w-full h-full"
+            >
+              {SlideContent}
+            </Link>
+          ) : (
+            <div key={slide.id} className="min-w-full h-full">
+              {SlideContent}
+            </div>
+          );
+        })}
       </div>
 
       {/* Navigation Arrows */}

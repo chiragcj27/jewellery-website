@@ -4,6 +4,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 
+interface Filter {
+  name: string;
+  slug: string;
+  type: 'select' | 'multiselect';
+  options: string[];
+}
+
 interface Category {
   _id: string;
   name: string;
@@ -12,6 +19,7 @@ interface Category {
   image?: string;
   isActive: boolean;
   displayOrder: number;
+  filters: Filter[];
 }
 
 export default function CategoriesPage() {
@@ -26,6 +34,7 @@ export default function CategoriesPage() {
     imageAssetId: '',
     isActive: true,
     displayOrder: 0,
+    filters: [] as Filter[],
   });
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -57,6 +66,7 @@ export default function CategoriesPage() {
         imageAssetId: formData.imageAssetId || undefined,
         isActive: formData.isActive,
         displayOrder: formData.displayOrder,
+        filters: formData.filters,
       };
       const result = editingCategory
         ? await api.categories.update(editingCategory._id, payload)
@@ -83,6 +93,7 @@ export default function CategoriesPage() {
       imageAssetId: '',
       isActive: category.isActive,
       displayOrder: category.displayOrder,
+      filters: category.filters || [],
     });
     setImageError(null);
     setShowForm(true);
@@ -112,10 +123,54 @@ export default function CategoriesPage() {
       imageAssetId: '',
       isActive: true,
       displayOrder: 0,
+      filters: [],
     });
     setEditingCategory(null);
     setShowForm(false);
     setImageError(null);
+  };
+
+  const addFilter = () => {
+    setFormData({
+      ...formData,
+      filters: [
+        ...formData.filters,
+        { name: '', slug: '', type: 'select', options: [] },
+      ],
+    });
+  };
+
+  const updateFilter = (index: number, field: keyof Filter, value: string | string[]) => {
+    const newFilters = [...formData.filters];
+    if (field === 'name') {
+      newFilters[index].name = value as string;
+      newFilters[index].slug = (value as string).toLowerCase().replace(/\s+/g, '-');
+    } else {
+      (newFilters[index][field] as typeof value) = value;
+    }
+    setFormData({ ...formData, filters: newFilters });
+  };
+
+  const removeFilter = (index: number) => {
+    const newFilters = formData.filters.filter((_, i) => i !== index);
+    setFormData({ ...formData, filters: newFilters });
+  };
+
+  const addFilterOption = (filterIndex: number, option: string) => {
+    if (!option.trim()) return;
+    const newFilters = [...formData.filters];
+    if (!newFilters[filterIndex].options.includes(option.trim())) {
+      newFilters[filterIndex].options.push(option.trim());
+      setFormData({ ...formData, filters: newFilters });
+    }
+  };
+
+  const removeFilterOption = (filterIndex: number, optionIndex: number) => {
+    const newFilters = [...formData.filters];
+    newFilters[filterIndex].options = newFilters[filterIndex].options.filter(
+      (_, i) => i !== optionIndex
+    );
+    setFormData({ ...formData, filters: newFilters });
   };
 
   const handleImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,7 +193,7 @@ export default function CategoriesPage() {
       } else {
         setImageError(result.error || 'Upload failed');
       }
-    } catch (err) {
+    } catch {
       setImageError('Upload failed');
     } finally {
       setImageUploading(false);
@@ -259,6 +314,115 @@ export default function CategoriesPage() {
                   </label>
                 </div>
               </div>
+
+              <div className="border-t pt-4 mt-4">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-medium text-gray-900">Product Filters</h3>
+                  <button
+                    type="button"
+                    onClick={addFilter}
+                    className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                  >
+                    + Add Filter
+                  </button>
+                </div>
+                {formData.filters.length === 0 ? (
+                  <p className="text-sm text-gray-500">No filters added yet.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {formData.filters.map((filter, index) => (
+                      <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex justify-between items-start mb-3">
+                          <h4 className="text-sm font-medium text-gray-700">Filter {index + 1}</h4>
+                          <button
+                            type="button"
+                            onClick={() => removeFilter(index)}
+                            className="text-red-600 hover:text-red-800 text-sm"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Filter Name
+                            </label>
+                            <input
+                              type="text"
+                              value={filter.name}
+                              onChange={(e) => updateFilter(index, 'name', e.target.value)}
+                              placeholder="e.g., Metal Type"
+                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Filter Type
+                            </label>
+                            <select
+                              value={filter.type}
+                              onChange={(e) => updateFilter(index, 'type', e.target.value)}
+                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="select">Single Select</option>
+                              <option value="multiselect">Multi Select</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="mt-3">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Filter Options
+                          </label>
+                          <div className="flex gap-2 mb-2">
+                            <input
+                              type="text"
+                              placeholder="Add option"
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  const input = e.target as HTMLInputElement;
+                                  addFilterOption(index, input.value);
+                                  input.value = '';
+                                }
+                              }}
+                              className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                const input = (e.currentTarget.previousElementSibling as HTMLInputElement);
+                                addFilterOption(index, input.value);
+                                input.value = '';
+                              }}
+                              className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                            >
+                              Add
+                            </button>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {filter.options.map((option, optionIndex) => (
+                              <span
+                                key={optionIndex}
+                                className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
+                              >
+                                {option}
+                                <button
+                                  type="button"
+                                  onClick={() => removeFilterOption(index, optionIndex)}
+                                  className="text-blue-600 hover:text-blue-900"
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="flex gap-2">
                 <button
                   type="submit"

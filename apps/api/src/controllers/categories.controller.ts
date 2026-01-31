@@ -46,7 +46,7 @@ export async function create(req: Request, res: Response): Promise<void> {
 
   try {
     await connectToDatabase();
-    const { name, description, isActive, displayOrder } = req.body;
+    const { name, description, isActive, displayOrder, filters } = req.body;
 
     if (!name) {
       res.status(400).json({ success: false, error: 'Name is required' });
@@ -60,6 +60,7 @@ export async function create(req: Request, res: Response): Promise<void> {
       image: imageUrl,
       isActive: isActive !== undefined ? isActive : true,
       displayOrder: displayOrder || 0,
+      filters: filters || [],
     });
 
     await category.save();
@@ -104,7 +105,7 @@ export async function update(req: Request, res: Response): Promise<void> {
 
   try {
     await connectToDatabase();
-    const { name, description, isActive, displayOrder } = req.body;
+    const { name, description, isActive, displayOrder, filters } = req.body;
 
     const updateData: Partial<ICategory> = {};
     if (name !== undefined) {
@@ -115,6 +116,7 @@ export async function update(req: Request, res: Response): Promise<void> {
     if (imageUrl !== undefined) updateData.image = imageUrl;
     if (isActive !== undefined) updateData.isActive = isActive;
     if (displayOrder !== undefined) updateData.displayOrder = displayOrder;
+    if (filters !== undefined) updateData.filters = filters;
 
     const category = await Category.findByIdAndUpdate(req.params.id, updateData, {
       new: true,

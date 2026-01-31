@@ -52,6 +52,7 @@ export async function uploadToS3(params: {
     Key: params.key,
     Body: params.body,
     ContentType: params.contentType,
+    // Note: ACL removed - bucket uses bucket policy for public access
   };
 
   await client.send(new PutObjectCommand(input));

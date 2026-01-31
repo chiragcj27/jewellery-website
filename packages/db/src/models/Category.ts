@@ -1,5 +1,12 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+export interface IFilter {
+  name: string;
+  slug: string;
+  type: 'select' | 'multiselect';
+  options: string[];
+}
+
 export interface ICategory extends Document {
   name: string;
   slug: string;
@@ -7,9 +14,37 @@ export interface ICategory extends Document {
   image?: string;
   isActive: boolean;
   displayOrder: number;
+  filters: IFilter[];
   createdAt: Date;
   updatedAt: Date;
 }
+
+const FilterSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    slug: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+    },
+    type: {
+      type: String,
+      enum: ['select', 'multiselect'],
+      required: true,
+    },
+    options: {
+      type: [String],
+      required: true,
+      default: [],
+    },
+  },
+  { _id: false }
+);
 
 const CategorySchema: Schema = new Schema(
   {
@@ -41,6 +76,10 @@ const CategorySchema: Schema = new Schema(
       type: Number,
       default: 0,
     },
+    filters: {
+      type: [FilterSchema],
+      default: [],
+    },
   },
   {
     timestamps: true,
@@ -48,7 +87,7 @@ const CategorySchema: Schema = new Schema(
 );
 
 // Create indexes
-CategorySchema.index({ slug: 1 });
+// Note: slug index is automatically created via unique: true on the field
 CategorySchema.index({ displayOrder: 1 });
 
 export default mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema);

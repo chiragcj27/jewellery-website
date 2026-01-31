@@ -1,14 +1,5 @@
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import path from 'path';
 
-dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
-
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://chiragcj27work:qOdviooDoNT0El1q@cluster0.od4gxzg.mongodb.net/jewellery-website';
-
-if (!MONGODB_URI) {
-  throw new Error('MONGODB_URI is not defined');
-}
 
 interface ConnectionOptions {
   bufferCommands?: boolean;
@@ -17,7 +8,14 @@ interface ConnectionOptions {
 
 let cachedConnection: typeof mongoose | null = null;
 
-export async function connectToDatabase(): Promise<typeof mongoose> {
+export async function connectToDatabase(MONGODB_URI?: string): Promise<typeof mongoose> {
+  // If no URI provided, try to read from environment
+  const uri = MONGODB_URI || process.env.MONGODB_URI;
+  
+  if (!uri) {
+    throw new Error('MONGODB_URI is not defined');
+  }
+
   if (cachedConnection) {
     return cachedConnection;
   }
@@ -28,9 +26,9 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
       maxPoolSize: 10,
     };
 
-    console.log('MONGODB_URI:', MONGODB_URI);
+    console.log('MONGODB_URI:', uri);
 
-    const connection = await mongoose.connect(MONGODB_URI, options);
+    const connection = await mongoose.connect(uri, options);
     cachedConnection = connection;
     
     console.log('✅ Connected to MongoDB');

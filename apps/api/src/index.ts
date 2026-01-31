@@ -6,9 +6,16 @@ import categoriesRouter from './routes/categories';
 import subcategoriesRouter from './routes/subcategories';
 import productsRouter from './routes/products';
 import assetsRouter from './routes/assets';
+import siteSettingsRouter from './routes/siteSettings';
+import bannersRouter from './routes/banners';
+import bulkUploadRouter from './routes/bulkUpload';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+const MONGODB_URI = process.env.MONGODB_URI || '';
+if (!MONGODB_URI) {
+  throw new Error('MONGODB_URI is not defined');
+}
 
 // Middleware
 app.use(cors());
@@ -29,12 +36,15 @@ app.use('/api/categories', categoriesRouter);
 app.use('/api/subcategories', subcategoriesRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/assets', assetsRouter);
+app.use('/api/site-settings', siteSettingsRouter);
+app.use('/api/banners', bannersRouter);
+app.use('/api/bulk-upload', bulkUploadRouter);
 
 // Start server with database connection
 async function startServer() {
   try {
     // Connect to database
-    await connectToDatabase();
+    await connectToDatabase(MONGODB_URI);
     
     // Start listening
     app.listen(PORT, () => {

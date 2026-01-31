@@ -57,7 +57,7 @@ const AssetSchema: Schema = new Schema(
   }
 );
 
-AssetSchema.index({ key: 1 });
+// Note: key index is automatically created via unique: true on the field
 AssetSchema.index({ refType: 1, refId: 1 });
 
 export default mongoose.models.Asset || mongoose.model<IAsset>('Asset', AssetSchema);

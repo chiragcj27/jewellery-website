@@ -76,6 +76,7 @@ export async function create(req: Request, res: Response): Promise<void> {
       isActive,
       isFeatured,
       displayOrder,
+      filterValues,
       metadata,
     } = req.body;
 
@@ -122,6 +123,7 @@ export async function create(req: Request, res: Response): Promise<void> {
       isActive: isActive !== undefined ? isActive : true,
       isFeatured: isFeatured !== undefined ? isFeatured : false,
       displayOrder: displayOrder || 0,
+      filterValues: filterValues || {},
       metadata: metadata || {},
     });
 
@@ -188,6 +190,7 @@ export async function update(req: Request, res: Response): Promise<void> {
       isActive,
       isFeatured,
       displayOrder,
+      filterValues,
       metadata,
     } = req.body;
 
@@ -234,6 +237,7 @@ export async function update(req: Request, res: Response): Promise<void> {
     if (isActive !== undefined) updateData.isActive = isActive;
     if (isFeatured !== undefined) updateData.isFeatured = isFeatured;
     if (displayOrder !== undefined) updateData.displayOrder = displayOrder;
+    if (filterValues !== undefined) updateData.filterValues = filterValues;
     if (metadata !== undefined) updateData.metadata = metadata;
 
     const product = await Product.findByIdAndUpdate(req.params.id, updateData, {

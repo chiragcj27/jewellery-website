@@ -4,10 +4,18 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 
+interface Filter {
+  name: string;
+  slug: string;
+  type: 'select' | 'multiselect';
+  options: string[];
+}
+
 interface Category {
   _id: string;
   name: string;
   slug: string;
+  filters?: Filter[];
 }
 
 interface Subcategory {
@@ -57,6 +65,7 @@ export default function ProductsPage() {
     isActive: true,
     isFeatured: false,
     displayOrder: 0,
+    filterValues: {} as Record<string, string | string[]>,
   });
   const [imagesUploading, setImagesUploading] = useState(false);
   const [imagesError, setImagesError] = useState<string | null>(null);
@@ -71,7 +80,7 @@ export default function ProductsPage() {
       fetchSubcategories(formData.category);
     } else {
       setSubcategories([]);
-      setFormData({ ...formData, subcategory: '' });
+      setFormData((prev) => ({ ...prev, subcategory: '', filterValues: {} }));
     }
   }, [formData.category]);
 
@@ -133,6 +142,7 @@ export default function ProductsPage() {
         isActive: formData.isActive,
         isFeatured: formData.isFeatured,
         displayOrder: formData.displayOrder,
+        filterValues: formData.filterValues,
       };
 
       const result = editingProduct
@@ -175,6 +185,7 @@ export default function ProductsPage() {
       isActive: product.isActive,
       isFeatured: product.isFeatured,
       displayOrder: product.displayOrder,
+      filterValues: (product as any).filterValues || {},
     });
     setImagesError(null);
     setShowForm(true);
@@ -215,11 +226,30 @@ export default function ProductsPage() {
       isActive: true,
       isFeatured: false,
       displayOrder: 0,
+      filterValues: {},
     });
     setEditingProduct(null);
     setShowForm(false);
     setSubcategories([]);
     setImagesError(null);
+  };
+
+  const updateFilterValue = (filterSlug: string, value: string | string[]) => {
+    setFormData({
+      ...formData,
+      filterValues: {
+        ...formData.filterValues,
+        [filterSlug]: value,
+      },
+    });
+  };
+
+  const toggleMultiselectOption = (filterSlug: string, option: string) => {
+    const current = (formData.filterValues[filterSlug] || []) as string[];
+    const newValue = current.includes(option)
+      ? current.filter((o) => o !== option)
+      : [...current, option];
+    updateFilterValue(filterSlug, newValue);
   };
 
   const handleImageFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -282,12 +312,20 @@ export default function ProductsPage() {
             </Link>
             <h1 className="text-3xl font-bold text-gray-900">Products</h1>
           </div>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            {showForm ? 'Cancel' : '+ Add Product'}
-          </button>
+          <div className="flex gap-2">
+            <Link
+              href="/products/bulk-upload"
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            >
+              Bulk Upload
+            </Link>
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              {showForm ? 'Cancel' : '+ Add Product'}
+            </button>
+          </div>
         </div>
 
         {showForm && (
@@ -335,6 +373,50 @@ export default function ProductsPage() {
                   </select>
                 </div>
               </div>
+              
+              {formData.category && categories.find((c) => c._id === formData.category)?.filters && categories.find((c) => c._id === formData.category)!.filters!.length > 0 && (
+                <div className="border rounded-lg p-4 bg-gray-50">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Product Filters</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {categories.find((c) => c._id === formData.category)!.filters!.map((filter) => (
+                      <div key={filter.slug}>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {filter.name}
+                        </label>
+                        {filter.type === 'select' ? (
+                          <select
+                            value={(formData.filterValues[filter.slug] as string) || ''}
+                            onChange={(e) => updateFilterValue(filter.slug, e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="">Select {filter.name}</option>
+                            {filter.options.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <div className="space-y-2">
+                            {filter.options.map((option) => (
+                              <label key={option} className="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  checked={((formData.filterValues[filter.slug] || []) as string[]).includes(option)}
+                                  onChange={() => toggleMultiselectOption(filter.slug, option)}
+                                  className="mr-2"
+                                />
+                                <span className="text-sm text-gray-700">{option}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Name *

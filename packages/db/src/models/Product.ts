@@ -17,6 +17,7 @@ export interface IProduct extends Document {
   isActive: boolean;
   isFeatured: boolean;
   displayOrder: number;
+  filterValues: Record<string, string | string[]>;
   metadata?: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
@@ -86,6 +87,10 @@ const ProductSchema: Schema = new Schema(
     displayOrder: {
       type: Number,
       default: 0,
+    },
+    filterValues: {
+      type: Schema.Types.Mixed,
+      default: {},
     },
     metadata: {
       type: Schema.Types.Mixed,

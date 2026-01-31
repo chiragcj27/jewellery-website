@@ -7,9 +7,11 @@ export interface ProductCardProps {
   image: string;
   title: string;
   currentPrice: string;
-  originalPrice: string;
-  discountLabel: string;
+  originalPrice?: string;
+  discountLabel?: string;
   offerTag?: string;
+  metalType?: string;
+  weightInGrams?: number;
 }
 
 export default function ProductCard({
@@ -19,6 +21,8 @@ export default function ProductCard({
   originalPrice,
   discountLabel,
   offerTag = "Buy 1 Get 1",
+  metalType,
+  weightInGrams,
 }: ProductCardProps) {
   const [isWishlisted, setIsWishlisted] = useState(false);
 
@@ -26,9 +30,11 @@ export default function ProductCard({
     <article className="flex flex-col bg-white rounded-none overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 min-w-[220px]">
       <div className="relative aspect-4/5 bg-[#f8f5ef]">
         {/* Offer tag */}
-        <div className="absolute left-0 top-0 z-10 px-3 py-1 bg-black/80 text-xs font-medium text-white uppercase tracking-wide">
-          {offerTag}
-        </div>
+        {offerTag && (
+          <div className="absolute left-0 top-0 z-10 px-3 py-1 bg-black/80 text-xs font-medium text-white uppercase tracking-wide">
+            {offerTag}
+          </div>
+        )}
 
         {/* Product image */}
         <Image
@@ -79,14 +85,24 @@ export default function ProductCard({
         <h3 className="text-sm font-medium text-gray-900 line-clamp-2 min-h-10">
           {title}
         </h3>
+        {/* Metal type and weight info */}
+        {metalType && weightInGrams && (
+          <div className="text-xs text-gray-500">
+            {metalType} • {weightInGrams}g
+          </div>
+        )}
         <div className="flex items-center gap-2 text-sm">
           <span className="font-semibold text-gray-900">{currentPrice}</span>
-          <span className="text-xs text-gray-500 line-through">
-            {originalPrice}
-          </span>
-          <span className="text-xs font-semibold text-green-600">
-            {discountLabel}
-          </span>
+          {originalPrice && (
+            <span className="text-xs text-gray-500 line-through">
+              {originalPrice}
+            </span>
+          )}
+          {discountLabel && (
+            <span className="text-xs font-semibold text-green-600">
+              {discountLabel}
+            </span>
+          )}
         </div>
       </div>
     </article>

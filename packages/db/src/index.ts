@@ -9,3 +9,7 @@ export { default as Product, IProduct } from './models/Product';
 export { default as Asset, IAsset, type AssetRefType } from './models/Asset';
 export { default as SiteSettings, ISiteSettings } from './models/SiteSettings';
 export { default as Banner, IBanner } from './models/Banner';
+export { default as MetalRate, IMetalRate } from './models/MetalRate';
+
+// Utils
+export * from './utils/priceCalculator';

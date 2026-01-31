@@ -34,19 +34,32 @@ interface Product {
   images: string[];
   category: Category | string;
   subcategory: Subcategory | string;
-  price: number;
+  price?: number;
   compareAtPrice?: number;
   sku?: string;
   stock?: number;
   isActive: boolean;
   isFeatured: boolean;
   displayOrder: number;
+  weightInGrams?: number;
+  metalType?: string;
+  useDynamicPricing: boolean;
+}
+
+interface MetalRate {
+  _id: string;
+  metalType: string;
+  ratePerTenGrams: number;
+  makingChargePerGram: number;
+  gstPercentage: number;
+  isActive: boolean;
 }
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [metalRates, setMetalRates] = useState<MetalRate[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -66,6 +79,9 @@ export default function ProductsPage() {
     isFeatured: false,
     displayOrder: 0,
     filterValues: {} as Record<string, string | string[]>,
+    weightInGrams: '',
+    metalType: '',
+    useDynamicPricing: false,
   });
   const [imagesUploading, setImagesUploading] = useState(false);
   const [imagesError, setImagesError] = useState<string | null>(null);
@@ -73,6 +89,7 @@ export default function ProductsPage() {
   useEffect(() => {
     fetchCategories();
     fetchProducts();
+    fetchMetalRates();
   }, []);
 
   useEffect(() => {
@@ -92,6 +109,17 @@ export default function ProductsPage() {
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
+    }
+  };
+
+  const fetchMetalRates = async () => {
+    try {
+      const result = await api.metalRates.getAll(true); // Only active rates
+      if (result.success) {
+        setMetalRates(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching metal rates:', error);
     }
   };
 
@@ -121,8 +149,19 @@ export default function ProductsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.category || !formData.subcategory || !formData.price) {
+    if (!formData.category || !formData.subcategory) {
       alert('Please fill in all required fields');
+      return;
+    }
+
+    // Validate pricing: either price OR (useDynamicPricing + weightInGrams + metalType)
+    if (!formData.useDynamicPricing && !formData.price) {
+      alert('Price is required when not using dynamic pricing');
+      return;
+    }
+
+    if (formData.useDynamicPricing && (!formData.weightInGrams || !formData.metalType)) {
+      alert('Weight and metal type are required for dynamic pricing');
       return;
     }
 
@@ -135,7 +174,7 @@ export default function ProductsPage() {
         shortDescription: formData.shortDescription || undefined,
         images: formData.images,
         imageAssetIds: formData.imageAssetIds.length ? formData.imageAssetIds : undefined,
-        price: parseFloat(formData.price),
+        price: formData.price ? parseFloat(formData.price) : undefined,
         compareAtPrice: formData.compareAtPrice ? parseFloat(formData.compareAtPrice) : undefined,
         sku: formData.sku || undefined,
         stock: formData.stock ? parseInt(formData.stock, 10) : 0,
@@ -143,6 +182,9 @@ export default function ProductsPage() {
         isFeatured: formData.isFeatured,
         displayOrder: formData.displayOrder,
         filterValues: formData.filterValues,
+        weightInGrams: formData.weightInGrams ? parseFloat(formData.weightInGrams) : undefined,
+        metalType: formData.metalType || undefined,
+        useDynamicPricing: formData.useDynamicPricing,
       };
 
       const result = editingProduct
@@ -178,7 +220,7 @@ export default function ProductsPage() {
       shortDescription: product.shortDescription || '',
       images: product.images || [],
       imageAssetIds: [],
-      price: product.price.toString(),
+      price: product.price?.toString() || '',
       compareAtPrice: product.compareAtPrice?.toString() || '',
       sku: product.sku || '',
       stock: product.stock?.toString() || '',
@@ -186,6 +228,9 @@ export default function ProductsPage() {
       isFeatured: product.isFeatured,
       displayOrder: product.displayOrder,
       filterValues: (product as any).filterValues || {},
+      weightInGrams: product.weightInGrams?.toString() || '',
+      metalType: product.metalType || '',
+      useDynamicPricing: product.useDynamicPricing || false,
     });
     setImagesError(null);
     setShowForm(true);
@@ -227,6 +272,9 @@ export default function ProductsPage() {
       isFeatured: false,
       displayOrder: 0,
       filterValues: {},
+      weightInGrams: '',
+      metalType: '',
+      useDynamicPricing: false,
     });
     setEditingProduct(null);
     setShowForm(false);
@@ -451,44 +499,116 @@ export default function ProductsPage() {
                   rows={4}
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Price *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Compare At Price
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formData.compareAtPrice}
-                    onChange={(e) => setFormData({ ...formData, compareAtPrice: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Stock
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.stock}
-                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+
+              {/* Pricing Type Selection */}
+              <div className="border-t border-b border-gray-200 py-4 my-4">
+                <h3 className="text-lg font-medium text-gray-900 mb-3">Pricing Configuration</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.useDynamicPricing}
+                        onChange={(e) => setFormData({ ...formData, useDynamicPricing: e.target.checked })}
+                        className="mr-2"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        Use Weight-Based Dynamic Pricing
+                      </span>
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1 ml-6">
+                      Calculate price automatically based on weight and metal type
+                    </p>
+                  </div>
+
+                  {formData.useDynamicPricing ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 border border-blue-200 rounded-md p-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Weight in Grams *
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          required
+                          value={formData.weightInGrams}
+                          onChange={(e) => setFormData({ ...formData, weightInGrams: e.target.value })}
+                          placeholder="5.5"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Metal Type *
+                        </label>
+                        <select
+                          required
+                          value={formData.metalType}
+                          onChange={(e) => setFormData({ ...formData, metalType: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Select metal type</option>
+                          {metalRates.map((rate) => (
+                            <option key={rate._id} value={rate.metalType}>
+                              {rate.metalType} (₹{rate.ratePerTenGrams}/10g)
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <p className="text-xs text-blue-700">
+                          Price will be calculated automatically: (Gold Rate × Weight) + (Making Charges × Weight) + GST
+                        </p>
+                        {!metalRates.length && (
+                          <p className="text-xs text-red-600 mt-1">
+                            No metal rates configured. Please add metal rates in the <Link href="/metal-rates" className="underline">Metal Rates</Link> section.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Price *
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          required={!formData.useDynamicPricing}
+                          value={formData.price}
+                          onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Compare At Price
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={formData.compareAtPrice}
+                          onChange={(e) => setFormData({ ...formData, compareAtPrice: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Stock
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.stock}
+                          onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -649,10 +769,21 @@ export default function ProductsPage() {
                         <div className="text-xs text-gray-400">→ {subcategoryName}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="font-medium">${product.price.toFixed(2)}</div>
-                        {product.compareAtPrice && (
-                          <div className="text-xs text-gray-400 line-through">
-                            ${product.compareAtPrice.toFixed(2)}
+                        {product.useDynamicPricing ? (
+                          <div>
+                            <div className="font-medium text-blue-600">Dynamic Pricing</div>
+                            <div className="text-xs text-gray-500">
+                              {product.weightInGrams}g • {product.metalType}
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="font-medium">${product.price?.toFixed(2) || '0.00'}</div>
+                            {product.compareAtPrice && (
+                              <div className="text-xs text-gray-400 line-through">
+                                ${product.compareAtPrice.toFixed(2)}
+                              </div>
+                            )}
                           </div>
                         )}
                       </td>

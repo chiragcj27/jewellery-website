@@ -35,7 +35,8 @@ Fill in the Products sheet with your product data. Here's what each column means
 | `name` | Text | Product name | "Gold Diamond Ring" |
 | `category` | Text | Category name or slug (must exist) | "Rings" or "rings" |
 | `subcategory` | Text | Subcategory name or slug (must exist) | "Gold Rings" or "gold-rings" |
-| `price` | Number | Product price | 999.99 |
+
+**Note**: Either `price` OR (`weightInGrams` + `metalType` + `useDynamicPricing=true`) is required.
 
 #### Optional Columns
 
@@ -43,6 +44,7 @@ Fill in the Products sheet with your product data. Here's what each column means
 |--------|------|-------------|---------|
 | `description` | Text | Detailed product description | "Beautiful handcrafted gold ring..." |
 | `shortDescription` | Text | Brief description | "24k gold ring with diamonds" |
+| `price` | Number | Fixed price (required if not using dynamic pricing) | 999.99 |
 | `compareAtPrice` | Number | Original price (for showing discounts) | 1499.99 |
 | `sku` | Text | Stock keeping unit | "RING-001" |
 | `stock` | Number | Available quantity | 10 |
@@ -51,6 +53,9 @@ Fill in the Products sheet with your product data. Here's what each column means
 | `displayOrder` | Number | Sort order (lower appears first) | 0 |
 | `images` | Text | Comma-separated image URLs | "https://example.com/img1.jpg,https://example.com/img2.jpg" |
 | `filterValues` | JSON | Category-specific filters | `{"material":"Gold","color":"Yellow"}` |
+| `weightInGrams` | Number | Weight in grams (for dynamic pricing) | 5.5 |
+| `metalType` | Text | Metal type (for dynamic pricing) | "22KT" |
+| `useDynamicPricing` | Boolean | Use weight-based pricing | true / false |
 
 ### Step 3: Handle Images
 
@@ -113,18 +118,48 @@ https://example.com/products/ring1.jpg,https://example.com/products/ring2.jpg
 
 You can upload the Excel file without images and add them later by editing each product individually.
 
-### Step 4: Validation Rules
+### Step 4: Choosing Pricing Method
+
+You can use either **Fixed Pricing** or **Weight-Based Dynamic Pricing**:
+
+#### Fixed Pricing (Traditional)
+- Set `useDynamicPricing` to `false` or leave it empty
+- Enter `price` value
+- Example: `price=999.99, useDynamicPricing=false`
+
+#### Weight-Based Dynamic Pricing (Recommended for Gold Jewellery)
+- Set `useDynamicPricing` to `true`
+- Enter `weightInGrams` (e.g., 5.5)
+- Enter `metalType` (e.g., "22KT", "18KT")
+- Price will be calculated automatically: `(Gold Rate × Weight) + (Making Charges × Weight) + GST`
+- Example: `weightInGrams=5.5, metalType=22KT, useDynamicPricing=true`
+
+**Important**: Make sure metal rates are configured in the admin portal before using dynamic pricing!
+
+### Step 5: Validation Rules
 
 The system validates all data before creating products. Make sure:
 
 - **Category exists**: Use exact category name or slug from the Reference sheet
 - **Subcategory exists**: Use exact subcategory name or slug from the Reference sheet
 - **Subcategory belongs to category**: The subcategory must be under the specified category
-- **Price is valid**: Must be a number >= 0
+- **Pricing is valid**: Either `price` OR (`weightInGrams` + `metalType` + `useDynamicPricing=true`)
 - **Stock is valid**: If provided, must be a number >= 0
 - **Unique names**: Product names should be unique within the same category/subcategory combination
+- **Metal type exists**: If using dynamic pricing, the metal type must have rates configured
 
-### Step 5: Upload the File
+#### ⚠️ Important: Case Sensitivity Rules
+
+| Field | Case Sensitive? | Examples |
+|-------|----------------|----------|
+| Category Name | ❌ NO | "Rings" = "rings" = "RINGS" ✅ |
+| Subcategory Name | ❌ NO | "Gold Rings" = "gold rings" ✅ |
+| Metal Type | ✅ YES | "22KT" ≠ "22kt" ≠ "22 KT" ❌ |
+| Boolean Values | ❌ NO | true = True = TRUE ✅ |
+
+**Summary:** Spelling must be correct for all fields, but only **metal type** cares about uppercase/lowercase!
+
+### Step 6: Upload the File
 
 1. Click **"Select Excel File"** and choose your completed file
 2. Click **"Upload and Create Products"**
@@ -136,7 +171,7 @@ The system will:
 - Fix the errors in your Excel file and try again
 - If all rows are valid, all products will be created
 
-### Step 6: Review Results
+### Step 7: Review Results
 
 After upload, you'll see:
 - **Total rows processed**
@@ -184,18 +219,25 @@ Check your category's filters in the Categories page to see what options are ava
 
 ## Troubleshooting
 
-### "Category not found"
-- Make sure you're using the exact category name or slug from the Reference sheet
-- Category names are case-insensitive, but spelling must be exact
+### Error: "Category not found"
+- Make sure you're using the correct spelling of category name
+- Category names are **NOT case-sensitive**: "Rings", "rings", and "RINGS" all work
+- However, spelling must be exact: "Rigns" won't work
 
-### "Subcategory does not belong to category"
+### Error: "Subcategory does not belong to category"
 - Check the Reference sheet to see which category the subcategory belongs to
 - Make sure you're pairing them correctly
+- Subcategory names are also NOT case-sensitive
 
-### "Valid price (>= 0) is required"
+### Error: "Valid price (>= 0) is required"
 - Make sure the price column contains a number
 - Don't include currency symbols ($)
 - Use decimal point (.) not comma (,) for decimals
+
+### Error: "Metal rate for X not found"
+- The metal type must be configured in Metal Rates page first
+- Metal type **IS case-sensitive**: "22KT" ≠ "22kt" ≠ "22 KT"
+- Make sure it exactly matches what you configured
 
 ### "Upload failed"
 - Check file format (must be .xlsx, .xls, or .csv)
@@ -210,11 +252,21 @@ Check your category's filters in the Categories page to see what options are ava
 
 ## Example Excel Data
 
-Here's a complete example row:
+### Example 1: Fixed Price Product
 
 | name | category | subcategory | price | compareAtPrice | sku | stock | isActive | isFeatured | images | description |
 |------|----------|-------------|-------|----------------|-----|-------|----------|------------|--------|-------------|
-| Classic Gold Ring | Rings | Gold Rings | 999.99 | 1499.99 | RING-GLD-001 | 25 | true | true | https://cdn.example.com/ring1.jpg | Beautiful 24k gold ring with intricate designs |
+| Diamond Ring | Rings | Diamond Rings | 999.99 | 1499.99 | RING-DIA-001 | 25 | true | true | https://cdn.example.com/ring1.jpg | Beautiful diamond ring |
+
+### Example 2: Dynamic Pricing Product (Weight-Based)
+
+| name | category | subcategory | weightInGrams | metalType | useDynamicPricing | sku | stock | isActive | images | description |
+|------|----------|-------------|---------------|-----------|-------------------|-----|-------|----------|--------|-------------|
+| Classic Gold Ring | Rings | Gold Rings | 5.5 | 22KT | true | RING-GLD-001 | 25 | true | https://cdn.example.com/ring1.jpg | Beautiful 22K gold ring |
+
+For the dynamic pricing example, if your metal rates are:
+- 22KT: ₹75,000/10g, ₹500/g making, 3% GST
+- The price would be calculated as: ₹41,200
 
 ## Support
 

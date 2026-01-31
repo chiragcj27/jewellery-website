@@ -94,9 +94,39 @@ export default function BulkUploadPage() {
           </p>
         </div>
 
+        {/* Important Things to Keep in Mind */}
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-6">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-lg font-semibold text-yellow-800 mb-2">⚠️ Important Things to Keep in Mind</h3>
+              <ul className="text-sm text-yellow-700 space-y-1 list-disc list-inside">
+                <li><strong>Test first:</strong> Upload 1-2 test products before bulk uploading hundreds</li>
+                <li><strong>Backup data:</strong> Keep a copy of your Excel file before uploading</li>
+                <li><strong>Spelling matters:</strong> Category and subcategory names must match exactly (NOT case-sensitive: "Rings" = "rings")</li>
+                <li><strong>Metal rates first:</strong> Configure metal rates in <Link href="/metal-rates" className="underline font-semibold">Metal Rates</Link> page before using dynamic pricing</li>
+                <li><strong>Choose one pricing:</strong> Use either price OR (weightInGrams + metalType + useDynamicPricing=true), not both</li>
+                <li><strong>Weight validation:</strong> Weight must be greater than 0 for dynamic pricing</li>
+                <li><strong>Metal type IS case-sensitive:</strong> Must match exactly (e.g., "22KT" not "22kt" or "22 KT")</li>
+                <li><strong>Image formats:</strong> Only JPG, PNG, GIF, WEBP are supported</li>
+                <li><strong>File size:</strong> Keep Excel file under 10MB, ZIP under 50MB</li>
+                <li><strong>All-or-nothing:</strong> If validation fails on any row, NO products will be created</li>
+                <li><strong>Unique names:</strong> Product names should be unique within same category/subcategory</li>
+                <li><strong>Boolean values:</strong> Use true/false, yes/no, or 1/0 for isActive and isFeatured</li>
+                <li><strong>Decimal format:</strong> Use dot (.) for decimals, not comma (5.5 not 5,5)</li>
+                <li><strong>ZIP structure:</strong> If using ZIP, include Excel file and images in root (not in subfolders)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         {/* Instructions Card */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Instructions</h2>
+          <h2 className="text-xl font-semibold mb-4">Step-by-Step Instructions</h2>
           <div className="space-y-3 text-gray-700">
             <div className="flex items-start">
               <span className="font-semibold mr-2">1.</span>
@@ -112,12 +142,26 @@ export default function BulkUploadPage() {
               <div>
                 <p className="font-medium">Fill in your product data</p>
                 <p className="text-sm text-gray-600">
-                  Required fields: name, category, subcategory, and price. Make sure category and subcategory names match exactly.
+                  Required fields: name, category, subcategory. Make sure category and subcategory names match exactly.
                 </p>
               </div>
             </div>
             <div className="flex items-start">
               <span className="font-semibold mr-2">3.</span>
+              <div>
+                <p className="font-medium">Choose pricing method</p>
+                <p className="text-sm text-gray-600 mb-2">
+                  <strong>Option A - Fixed Pricing:</strong> Set <span className="font-mono bg-gray-100 px-1">price</span> field (e.g., 45000) and leave <span className="font-mono bg-gray-100 px-1">useDynamicPricing</span> as false.
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Option B - Dynamic Pricing:</strong> Set <span className="font-mono bg-gray-100 px-1">weightInGrams</span> (e.g., 5.5), 
+                  <span className="font-mono bg-gray-100 px-1 ml-1">metalType</span> (e.g., "22KT"), and 
+                  <span className="font-mono bg-gray-100 px-1 ml-1">useDynamicPricing</span> to true. Price will be calculated automatically!
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <span className="font-semibold mr-2">4.</span>
               <div>
                 <p className="font-medium">Handle images (3 options)</p>
                 <p className="text-sm text-gray-600 mb-2">
@@ -135,7 +179,7 @@ export default function BulkUploadPage() {
               </div>
             </div>
             <div className="flex items-start">
-              <span className="font-semibold mr-2">4.</span>
+              <span className="font-semibold mr-2">5.</span>
               <div>
                 <p className="font-medium">Upload the completed file</p>
                 <p className="text-sm text-gray-600">
@@ -147,21 +191,73 @@ export default function BulkUploadPage() {
 
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
             <h3 className="font-medium text-blue-900 mb-2">Column Guide:</h3>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li><span className="font-mono bg-white px-1">name</span> - Product name (required)</li>
-              <li><span className="font-mono bg-white px-1">category</span> - Category name or slug (required)</li>
-              <li><span className="font-mono bg-white px-1">subcategory</span> - Subcategory name or slug (required)</li>
-              <li><span className="font-mono bg-white px-1">price</span> - Product price (required, number)</li>
-              <li><span className="font-mono bg-white px-1">description</span> - Detailed description (optional)</li>
-              <li><span className="font-mono bg-white px-1">shortDescription</span> - Brief description (optional)</li>
-              <li><span className="font-mono bg-white px-1">compareAtPrice</span> - Original price for discounts (optional)</li>
-              <li><span className="font-mono bg-white px-1">sku</span> - Stock keeping unit (optional)</li>
-              <li><span className="font-mono bg-white px-1">stock</span> - Stock quantity (optional, default: 0)</li>
-              <li><span className="font-mono bg-white px-1">isActive</span> - true/false (optional, default: true)</li>
-              <li><span className="font-mono bg-white px-1">isFeatured</span> - true/false (optional, default: false)</li>
-              <li><span className="font-mono bg-white px-1">displayOrder</span> - Sort order (optional, default: 0)</li>
-              <li><span className="font-mono bg-white px-1">images</span> - Comma-separated URLs (optional)</li>
-              <li><span className="font-mono bg-white px-1">filterValues</span> - JSON object for filters (optional)</li>
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm font-semibold text-blue-900 mb-1">Required Columns:</p>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li><span className="font-mono bg-white px-1">name</span> - Product name</li>
+                  <li><span className="font-mono bg-white px-1">category</span> - Category name or slug</li>
+                  <li><span className="font-mono bg-white px-1">subcategory</span> - Subcategory name or slug</li>
+                </ul>
+              </div>
+              
+              <div>
+                <p className="text-sm font-semibold text-blue-900 mb-1">Pricing Options (choose one):</p>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li><span className="font-mono bg-white px-1">price</span> - Fixed price (required if not using dynamic pricing)</li>
+                  <li><strong>OR</strong> for dynamic pricing:</li>
+                  <li className="ml-4"><span className="font-mono bg-white px-1">weightInGrams</span> - Weight in grams (e.g., 5.5)</li>
+                  <li className="ml-4"><span className="font-mono bg-white px-1">metalType</span> - Metal type (e.g., "22KT", "18KT")</li>
+                  <li className="ml-4"><span className="font-mono bg-white px-1">useDynamicPricing</span> - Set to true</li>
+                </ul>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-blue-900 mb-1">Optional Columns:</p>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li><span className="font-mono bg-white px-1">description</span> - Detailed description</li>
+                  <li><span className="font-mono bg-white px-1">shortDescription</span> - Brief description</li>
+                  <li><span className="font-mono bg-white px-1">compareAtPrice</span> - Original price for discounts</li>
+                  <li><span className="font-mono bg-white px-1">sku</span> - Stock keeping unit</li>
+                  <li><span className="font-mono bg-white px-1">stock</span> - Stock quantity (default: 0)</li>
+                  <li><span className="font-mono bg-white px-1">isActive</span> - true/false (default: true)</li>
+                  <li><span className="font-mono bg-white px-1">isFeatured</span> - true/false (default: false)</li>
+                  <li><span className="font-mono bg-white px-1">displayOrder</span> - Sort order (default: 0)</li>
+                  <li><span className="font-mono bg-white px-1">images</span> - Comma-separated URLs</li>
+                  <li><span className="font-mono bg-white px-1">filterValues</span> - JSON object for filters</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
+            <h3 className="font-medium text-green-900 mb-2">💰 Dynamic Pricing Example:</h3>
+            <p className="text-sm text-green-800 mb-2">
+              For a 5.5g gold ring with 22KT metal (configured at ₹75,000/10g, ₹500/g making, 3% GST):
+            </p>
+            <div className="text-sm text-green-800 font-mono bg-white p-2 rounded">
+              weightInGrams=5.5, metalType=22KT, useDynamicPricing=true
+            </div>
+            <p className="text-xs text-green-700 mt-2">
+              Price will be calculated: (75000÷10)×5.5 + 500×5.5 + 3% GST = ₹45,320
+            </p>
+            <p className="text-xs text-green-700 mt-1">
+              <strong>Important:</strong> Make sure metal rates are configured in <Link href="/metal-rates" className="underline">Metal Rates</Link> page first!
+            </p>
+          </div>
+
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <h3 className="font-medium text-red-900 mb-2">❌ Common Mistakes to Avoid:</h3>
+            <ul className="text-sm text-red-800 space-y-1">
+              <li>• <strong>Typo in category/subcategory:</strong> "Rigns" instead of "Rings" (spelling must match, but case doesn't matter)</li>
+              <li>• <strong>Metal type case mismatch:</strong> "22kt" or "22 KT" instead of "22KT" (metal type IS case-sensitive!)</li>
+              <li>• <strong>Missing price:</strong> Forgot to set price when useDynamicPricing is false</li>
+              <li>• <strong>Both pricing types:</strong> Setting both price AND dynamic pricing fields</li>
+              <li>• <strong>Weight is zero:</strong> Setting weightInGrams to 0 for dynamic pricing</li>
+              <li>• <strong>Category mismatch:</strong> Subcategory doesn't belong to the specified category</li>
+              <li>• <strong>Metal rate not configured:</strong> Using metalType that doesn't exist in Metal Rates</li>
+              <li>• <strong>Wrong decimal separator:</strong> Using comma (5,5) instead of dot (5.5)</li>
+              <li>• <strong>Images in subfolder:</strong> ZIP file has images in /images/ folder instead of root</li>
             </ul>
           </div>
         </div>

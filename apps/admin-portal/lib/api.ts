@@ -36,7 +36,7 @@ export interface ProductData {
   shortDescription?: string;
   images?: string[];
   imageAssetIds?: string[];
-  price: number;
+  price?: number;
   compareAtPrice?: number;
   sku?: string;
   stock?: number;
@@ -45,6 +45,17 @@ export interface ProductData {
   displayOrder?: number;
   filterValues?: Record<string, string | string[]>;
   metadata?: Record<string, unknown>;
+  weightInGrams?: number;
+  metalType?: string;
+  useDynamicPricing?: boolean;
+}
+
+export interface MetalRateData {
+  metalType: string;
+  ratePerTenGrams: number;
+  makingChargePerGram: number;
+  gstPercentage: number;
+  isActive?: boolean;
 }
 
 export const api = {
@@ -158,5 +169,28 @@ export const api = {
           document.body.removeChild(a);
         });
     },
+  },
+  metalRates: {
+    getAll: (active?: boolean) => {
+      const url = active !== undefined 
+        ? `${API_BASE_URL}/api/metal-rates?active=${active}`
+        : `${API_BASE_URL}/api/metal-rates`;
+      return fetch(url).then(res => res.json());
+    },
+    getById: (id: string) => fetch(`${API_BASE_URL}/api/metal-rates/${id}`).then(res => res.json()),
+    getByType: (metalType: string) => fetch(`${API_BASE_URL}/api/metal-rates/type/${metalType}`).then(res => res.json()),
+    create: (data: MetalRateData) => fetch(`${API_BASE_URL}/api/metal-rates`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(res => res.json()),
+    update: (id: string, data: Partial<MetalRateData>) => fetch(`${API_BASE_URL}/api/metal-rates/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(res => res.json()),
+    delete: (id: string) => fetch(`${API_BASE_URL}/api/metal-rates/${id}`, {
+      method: 'DELETE',
+    }).then(res => res.json()),
   },
 };

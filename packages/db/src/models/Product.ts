@@ -10,7 +10,7 @@ export interface IProduct extends Document {
   images: string[];
   category: mongoose.Types.ObjectId | ICategory;
   subcategory: mongoose.Types.ObjectId | ISubcategory;
-  price: number;
+  price?: number; // Optional for weight-based products
   compareAtPrice?: number;
   sku?: string;
   stock?: number;
@@ -19,6 +19,10 @@ export interface IProduct extends Document {
   displayOrder: number;
   filterValues: Record<string, string | string[]>;
   metadata?: Record<string, unknown>;
+  // Weight-based pricing fields
+  weightInGrams?: number; // Weight in grams
+  metalType?: string; // e.g., "22KT", "18KT", "20KT", etc.
+  useDynamicPricing: boolean; // If true, calculate price from weight and metal rate
   createdAt: Date;
   updatedAt: Date;
 }
@@ -60,7 +64,6 @@ const ProductSchema: Schema = new Schema(
     },
     price: {
       type: Number,
-      required: true,
       min: 0,
     },
     compareAtPrice: {
@@ -96,6 +99,19 @@ const ProductSchema: Schema = new Schema(
       type: Schema.Types.Mixed,
       default: {},
     },
+    // Weight-based pricing fields
+    weightInGrams: {
+      type: Number,
+      min: 0,
+    },
+    metalType: {
+      type: String,
+      trim: true,
+    },
+    useDynamicPricing: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
@@ -107,5 +123,7 @@ ProductSchema.index({ category: 1, subcategory: 1, slug: 1 }, { unique: true });
 ProductSchema.index({ category: 1, subcategory: 1 });
 ProductSchema.index({ isActive: 1, isFeatured: 1 });
 ProductSchema.index({ displayOrder: 1 });
+ProductSchema.index({ metalType: 1 });
+ProductSchema.index({ useDynamicPricing: 1 });
 
 export default mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);

@@ -78,12 +78,32 @@ export async function create(req: Request, res: Response): Promise<void> {
       displayOrder,
       filterValues,
       metadata,
+      weightInGrams,
+      metalType,
+      useDynamicPricing,
     } = req.body;
 
-    if (!name || !category || !subcategory || price === undefined) {
+    if (!name || !category || !subcategory) {
       res.status(400).json({
         success: false,
-        error: 'Name, category, subcategory, and price are required',
+        error: 'Name, category, and subcategory are required',
+      });
+      return;
+    }
+
+    // Validate pricing: either price OR (useDynamicPricing + weightInGrams + metalType)
+    if (!useDynamicPricing && price === undefined) {
+      res.status(400).json({
+        success: false,
+        error: 'Price is required when not using dynamic pricing',
+      });
+      return;
+    }
+
+    if (useDynamicPricing && (!weightInGrams || !metalType)) {
+      res.status(400).json({
+        success: false,
+        error: 'Weight and metal type are required for dynamic pricing',
       });
       return;
     }
@@ -125,6 +145,9 @@ export async function create(req: Request, res: Response): Promise<void> {
       displayOrder: displayOrder || 0,
       filterValues: filterValues || {},
       metadata: metadata || {},
+      weightInGrams: weightInGrams !== undefined ? weightInGrams : undefined,
+      metalType: metalType || undefined,
+      useDynamicPricing: useDynamicPricing || false,
     });
 
     await product.save();
@@ -192,6 +215,9 @@ export async function update(req: Request, res: Response): Promise<void> {
       displayOrder,
       filterValues,
       metadata,
+      weightInGrams,
+      metalType,
+      useDynamicPricing,
     } = req.body;
 
     const updateData: Record<string, unknown> = {};
@@ -239,6 +265,9 @@ export async function update(req: Request, res: Response): Promise<void> {
     if (displayOrder !== undefined) updateData.displayOrder = displayOrder;
     if (filterValues !== undefined) updateData.filterValues = filterValues;
     if (metadata !== undefined) updateData.metadata = metadata;
+    if (weightInGrams !== undefined) updateData.weightInGrams = weightInGrams;
+    if (metalType !== undefined) updateData.metalType = metalType;
+    if (useDynamicPricing !== undefined) updateData.useDynamicPricing = useDynamicPricing;
 
     const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
       new: true,

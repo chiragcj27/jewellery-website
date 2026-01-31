@@ -27,6 +27,9 @@ interface ExcelRow {
   displayOrder?: number | string;
   images?: string; // Comma-separated URLs or filenames (from ZIP)
   filterValues?: string; // JSON string of filter values
+  weightInGrams?: number | string; // Weight in grams for jewellery
+  metalType?: string; // e.g., "22KT", "18KT", "20KT"
+  useDynamicPricing?: boolean | string; // Use weight-based pricing
 }
 
 interface ValidationError {
@@ -162,14 +165,40 @@ async function validateRow(
     }
   }
 
-  const price = parseNumber(row.price);
-  if (price === undefined || price < 0) {
-    errors.push({
-      row: rowIndex,
-      field: 'price',
-      message: 'Valid price (>= 0) is required',
-      value: row.price,
-    });
+  // Validate pricing: either price OR (useDynamicPricing + weightInGrams + metalType)
+  const useDynamicPricing = parseBoolean(row.useDynamicPricing);
+  
+  if (useDynamicPricing) {
+    // Dynamic pricing: weight and metal type are required
+    const weight = parseNumber(row.weightInGrams);
+    if (weight === undefined || weight <= 0) {
+      errors.push({
+        row: rowIndex,
+        field: 'weightInGrams',
+        message: 'Valid weight (> 0) is required for dynamic pricing',
+        value: row.weightInGrams,
+      });
+    }
+
+    if (!row.metalType || String(row.metalType).trim() === '') {
+      errors.push({
+        row: rowIndex,
+        field: 'metalType',
+        message: 'Metal type is required for dynamic pricing',
+        value: row.metalType,
+      });
+    }
+  } else {
+    // Fixed pricing: price is required
+    const price = parseNumber(row.price);
+    if (price === undefined || price < 0) {
+      errors.push({
+        row: rowIndex,
+        field: 'price',
+        message: 'Valid price (>= 0) is required when not using dynamic pricing',
+        value: row.price,
+      });
+    }
   }
 
   const compareAtPrice = parseNumber(row.compareAtPrice);
@@ -404,7 +433,7 @@ export async function bulkUpload(req: Request, res: Response): Promise<void> {
           subcategory: new mongoose.Types.ObjectId(subcategoryId),
           description: row.description ? String(row.description).trim() : undefined,
           shortDescription: row.shortDescription ? String(row.shortDescription).trim() : undefined,
-          price: parseNumber(row.price)!,
+          price: parseNumber(row.price),
           compareAtPrice: parseNumber(row.compareAtPrice),
           sku: row.sku ? String(row.sku).trim() : undefined,
           stock: parseNumber(row.stock) ?? 0,
@@ -413,6 +442,9 @@ export async function bulkUpload(req: Request, res: Response): Promise<void> {
           displayOrder: parseNumber(row.displayOrder) ?? 0,
           images: imageUrls,
           filterValues: parseFilterValues(row.filterValues),
+          weightInGrams: parseNumber(row.weightInGrams),
+          metalType: row.metalType ? String(row.metalType).trim() : undefined,
+          useDynamicPricing: row.useDynamicPricing !== undefined ? parseBoolean(row.useDynamicPricing) : false,
         };
 
         const product = new Product(productData);
@@ -482,6 +514,9 @@ export async function downloadTemplate(_req: Request, res: Response): Promise<vo
         displayOrder: 0,
         images: 'https://example.com/image1.jpg,image1.jpg,image2.jpg',
         filterValues: '{"material":"Gold","color":"Yellow"}',
+        weightInGrams: 5.5,
+        metalType: '22KT',
+        useDynamicPricing: false,
       },
     ];
 
@@ -516,15 +551,19 @@ export async function downloadTemplate(_req: Request, res: Response): Promise<vo
     // Add instructions sheet
     const instructions = [
       { Instruction: '1. Fill the Products sheet with your product data' },
-      { Instruction: '2. Required fields: name, category, subcategory, price' },
-      { Instruction: '3. For images, you have 3 options:' },
+      { Instruction: '2. Required fields: name, category, subcategory' },
+      { Instruction: '3. For pricing, choose one of two options:' },
+      { Instruction: '   a) Fixed price: Set price field, leave useDynamicPricing as false' },
+      { Instruction: '   b) Weight-based: Set weightInGrams, metalType, useDynamicPricing=true' },
+      { Instruction: '4. For images, you have 3 options:' },
       { Instruction: '   a) Provide full URLs (https://...)' },
       { Instruction: '   b) Provide filenames (image1.jpg) and include images in a ZIP with this Excel file' },
       { Instruction: '   c) Leave empty and add images later' },
-      { Instruction: '4. Use comma to separate multiple images' },
-      { Instruction: '5. Check the Reference sheet for valid categories and subcategories' },
-      { Instruction: '6. Boolean fields accept: true/false, yes/no, 1/0' },
-      { Instruction: '7. Upload just the Excel file, or a ZIP containing Excel + image files' },
+      { Instruction: '5. Use comma to separate multiple images' },
+      { Instruction: '6. Check the Reference sheet for valid categories and subcategories' },
+      { Instruction: '7. Boolean fields accept: true/false, yes/no, 1/0' },
+      { Instruction: '8. Metal types: 22KT, 18KT, 20KT, 24KT, Silver, Platinum, etc.' },
+      { Instruction: '9. Upload just the Excel file, or a ZIP containing Excel + image files' },
     ];
     const instructionsSheet = XLSX.utils.json_to_sheet(instructions);
     XLSX.utils.book_append_sheet(workbook, instructionsSheet, 'Instructions');

@@ -9,6 +9,7 @@ import assetsRouter from './routes/assets';
 import siteSettingsRouter from './routes/siteSettings';
 import bannersRouter from './routes/banners';
 import bulkUploadRouter from './routes/bulkUpload';
+import metalRatesRouter from './routes/metalRates';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -39,6 +40,7 @@ app.use('/api/assets', assetsRouter);
 app.use('/api/site-settings', siteSettingsRouter);
 app.use('/api/banners', bannersRouter);
 app.use('/api/bulk-upload', bulkUploadRouter);
+app.use('/api/metal-rates', metalRatesRouter);
 
 // Start server with database connection
 async function startServer() {

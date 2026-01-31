@@ -54,6 +54,19 @@ export default function Home() {
           </Link>
 
           <Link
+            href="/metal-rates"
+            className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+          >
+            <div className="text-3xl mb-4">💰</div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Metal Rates
+            </h2>
+            <p className="text-gray-600">
+              Manage gold rates, making charges, and GST
+            </p>
+          </Link>
+
+          <Link
             href="/assets"
             className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
           >

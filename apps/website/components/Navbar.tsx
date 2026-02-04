@@ -1,10 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 import PreHeader from "./pre-header";
+import { useCartStore } from "@/store/cartStore";
+import { useWishlistStore } from "@/store/wishlistStore";
 
 export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
+  // useSyncExternalStore avoids hydration mismatch: server snapshot is 0, client uses persisted cart.
+  const cartItemCount = useSyncExternalStore(
+    (onStoreChange) => useCartStore.subscribe(onStoreChange),
+    () => useCartStore.getState().getTotalItems(),
+    () => 0
+  );
+  const wishlistCount = useSyncExternalStore(
+    (onStoreChange) => useWishlistStore.subscribe(onStoreChange),
+    () => useWishlistStore.getState().getCount(),
+    () => 0
+  );
 
   return (
     <>
@@ -14,9 +28,9 @@ export default function Navbar() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between gap-4">
           {/* Brand Logo */}
-          <div className="shrink-0">
+          <Link href="/" className="shrink-0">
             <h1 className="text-5xl font-bold text-black belleza-regular">ZIVARA</h1>
-          </div>
+          </Link>
 
           {/* Search Bar */}
           <div className="flex-1 max-w-2xl">
@@ -52,8 +66,9 @@ export default function Navbar() {
 
           {/* User Icons */}
           <div className="flex items-center gap-4 shrink-0">
-            {/* Profile Icon with Lightning */}
-            <button
+            {/* Profile Icon */}
+            <Link
+              href="/auth"
               className="relative text-black hover:opacity-70 transition-opacity"
               aria-label="Account"
             >
@@ -71,10 +86,11 @@ export default function Navbar() {
                 <circle cx="12" cy="7" r="4" />
               </svg>
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full"></span>
-            </button>
+            </Link>
 
             {/* Wishlist Icon with Badge */}
-            <button
+            <Link
+              href="/wishlist"
               className="relative text-black hover:opacity-70 transition-opacity"
               aria-label="Wishlist"
             >
@@ -90,13 +106,16 @@ export default function Navbar() {
               >
                 <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
               </svg>
-              <span className="absolute -top-2 -right-2 w-5 h-5 bg-black text-white text-xs rounded-full flex items-center justify-center font-medium">
-                0
-              </span>
-            </button>
+              {wishlistCount > 0 && (
+                <span className="absolute -top-2 -right-2 w-5 h-5 bg-black text-white text-xs rounded-full flex items-center justify-center font-medium">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
 
             {/* Shopping Cart Icon with Badge */}
-            <button
+            <Link
+              href="/cart"
               className="relative text-black hover:opacity-70 transition-opacity"
               aria-label="Shopping Cart"
             >
@@ -115,9 +134,9 @@ export default function Navbar() {
                 <path d="M16 10a4 4 0 0 1-8 0" />
               </svg>
               <span className="absolute -top-2 -right-2 w-5 h-5 bg-black text-white text-xs rounded-full flex items-center justify-center font-medium">
-                0
+                {cartItemCount}
               </span>
-            </button>
+            </Link>
           </div>
         </div>
       </div>

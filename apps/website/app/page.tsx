@@ -1,7 +1,7 @@
 import PreHeader from "@/components/pre-header";
 import Navbar from "@/components/Navbar";
 import Banner from "@/components/banner";
-import CategoryCard from "@/components/category-card";
+import CategoryCarousel from "@/components/category-carousel";
 import TopStylesSection from "@/components/top-styles-section";
 import Marquee from "react-fast-marquee";
 import FeaturedBanner from "@/components/featured-banner";
@@ -129,22 +129,17 @@ export default function Home() {
         <h2 className="text-4xl font-bold text-center mb-10 mt-10">Shop by category</h2>
       </div>
       <section
-        className="w-full flex flex-nowrap overflow-x-auto sm:overflow-visible"
+        className="w-full"
         aria-label="Shop by category"
       >
-        {CATEGORIES.map((cat) => (
-          <div
-            key={cat.label}
-            className="w-[50vw] shrink-0 sm:w-auto sm:flex-1 sm:min-w-0 px-1"
-          >
-            <CategoryCard
-              image={cat.image}
-              hoverImage={cat.hoverImage}
-              label={cat.label}
-              href="#"
-            />
-          </div>
-        ))}
+        <CategoryCarousel
+          categories={CATEGORIES.map((cat) => ({
+            label: cat.label,
+            image: cat.image,
+            hoverImage: cat.hoverImage,
+            href: "#",
+          }))}
+        />
       </section>
       <section>
         <div className="container mx-auto px-4 py-10">

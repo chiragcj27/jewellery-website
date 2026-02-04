@@ -20,6 +20,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "images.pexels.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "jewellery-website.s3.ap-south-1.amazonaws.com",
         pathname: "/**",
       }

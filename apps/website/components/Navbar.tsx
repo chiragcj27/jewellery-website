@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import PreHeader from "./pre-header";
 
 export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
+    <>
+    <PreHeader />
     <nav className="bg-white sticky top-0 z-50 border-b border-black">
       {/* Top Section - Utility Bar */}
       <div className="container mx-auto px-4 py-4">
@@ -138,6 +141,7 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
+    </>
   );
 }
 

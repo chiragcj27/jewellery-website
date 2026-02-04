@@ -114,8 +114,6 @@ const SAMPLE_PRODUCTS = [
 export default function Home() {
   return (
     <div>
-      <PreHeader />
-      <Navbar />
       <Banner />
       <div className="bg-black/90 w-full h-[40px] flex flex-row">
         <Marquee speed={100}>

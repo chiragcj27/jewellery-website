@@ -7,6 +7,7 @@ interface SiteSettings {
   _id: string;
   preHeaderText: string;
   preHeaderLink: string;
+  whatsappEnquiryNumber?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -23,6 +24,7 @@ export default function SettingsPage() {
   const [formData, setFormData] = useState({
     preHeaderText: '',
     preHeaderLink: '',
+    whatsappEnquiryNumber: '',
   });
 
   useEffect(() => {
@@ -44,6 +46,7 @@ export default function SettingsPage() {
       setFormData({
         preHeaderText: data.preHeaderText || '',
         preHeaderLink: data.preHeaderLink || '',
+        whatsappEnquiryNumber: data.whatsappEnquiryNumber || '',
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch settings');
@@ -167,6 +170,28 @@ export default function SettingsPage() {
               <p className="mt-2 text-sm text-gray-500">
                 This text will appear in the pre-header banner at the top of the website. 
                 If left empty, the default text will be shown.
+              </p>
+            </div>
+
+            {/* WhatsApp Enquiry Number */}
+            <div>
+              <label
+                htmlFor="whatsappEnquiryNumber"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                WhatsApp Number for Enquiries
+              </label>
+              <input
+                type="text"
+                id="whatsappEnquiryNumber"
+                name="whatsappEnquiryNumber"
+                value={formData.whatsappEnquiryNumber}
+                onChange={handleInputChange}
+                placeholder="e.g., 919876543210 (country code + number, no + or spaces)"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="mt-2 text-sm text-gray-500">
+                Business users can send cart enquiries to this number via WhatsApp. Include country code.
               </p>
             </div>
 

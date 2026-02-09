@@ -104,6 +104,45 @@ export default function Home() {
               Manage site settings and pre-header
             </p>
           </Link>
+
+          <Link
+            href="/wholesalers"
+            className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+          >
+            <div className="text-3xl mb-4">🏢</div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Wholesalers
+            </h2>
+            <p className="text-gray-600">
+              View all wholesaler details and approve or reject signups
+            </p>
+          </Link>
+
+          <Link
+            href="/customers"
+            className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+          >
+            <div className="text-3xl mb-4">👤</div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Customers
+            </h2>
+            <p className="text-gray-600">
+              View all customer details and accounts
+            </p>
+          </Link>
+
+          <Link
+            href="/orders"
+            className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+          >
+            <div className="text-3xl mb-4">📦</div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Orders
+            </h2>
+            <p className="text-gray-600">
+              View business enquiries and manage order status
+            </p>
+          </Link>
         </div>
       </div>
     </div>

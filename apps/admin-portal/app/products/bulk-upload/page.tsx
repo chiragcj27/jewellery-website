@@ -156,7 +156,9 @@ export default function BulkUploadPage() {
                 <p className="text-sm text-gray-600">
                   <strong>Option B - Dynamic Pricing:</strong> Set <span className="font-mono bg-gray-100 px-1">weightInGrams</span> (e.g., 5.5), 
                   <span className="font-mono bg-gray-100 px-1 ml-1">metalType</span> (e.g., "22KT"), and 
-                  <span className="font-mono bg-gray-100 px-1 ml-1">useDynamicPricing</span> to true. Price will be calculated automatically!
+                  <span className="font-mono bg-gray-100 px-1 ml-1">useDynamicPricing</span> to true. 
+                  Optionally include <span className="font-mono bg-gray-100 px-1 ml-1">wastagePercentage</span> (e.g., 8) for wholesaler pricing. 
+                  Price will be calculated automatically!
                 </p>
               </div>
             </div>
@@ -209,6 +211,7 @@ export default function BulkUploadPage() {
                   <li className="ml-4"><span className="font-mono bg-white px-1">weightInGrams</span> - Weight in grams (e.g., 5.5)</li>
                   <li className="ml-4"><span className="font-mono bg-white px-1">metalType</span> - Metal type (e.g., "22KT", "18KT")</li>
                   <li className="ml-4"><span className="font-mono bg-white px-1">useDynamicPricing</span> - Set to true</li>
+                  <li className="ml-4"><span className="font-mono bg-white px-1">wastagePercentage</span> - Optional wastage percentage (e.g., 8 = 8%)</li>
                 </ul>
               </div>
 
@@ -220,6 +223,7 @@ export default function BulkUploadPage() {
                   <li><span className="font-mono bg-white px-1">compareAtPrice</span> - Original price for discounts</li>
                   <li><span className="font-mono bg-white px-1">sku</span> - Stock keeping unit</li>
                   <li><span className="font-mono bg-white px-1">stock</span> - Stock quantity (default: 0)</li>
+                  <li><span className="font-mono bg-white px-1">wastagePercentage</span> - Wastage percentage for wholesaler pricing (e.g., 8 = 8%)</li>
                   <li><span className="font-mono bg-white px-1">isActive</span> - true/false (default: true)</li>
                   <li><span className="font-mono bg-white px-1">isFeatured</span> - true/false (default: false)</li>
                   <li><span className="font-mono bg-white px-1">displayOrder</span> - Sort order (default: 0)</li>

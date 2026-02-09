@@ -85,12 +85,18 @@ export default function ProductsPage() {
   });
   const [imagesUploading, setImagesUploading] = useState(false);
   const [imagesError, setImagesError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const limit = 50;
 
   useEffect(() => {
     fetchCategories();
-    fetchProducts();
     fetchMetalRates();
   }, []);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [page]);
 
   useEffect(() => {
     if (formData.category) {
@@ -135,10 +141,12 @@ export default function ProductsPage() {
   };
 
   const fetchProducts = async () => {
+    setLoading(true);
     try {
-      const result = await api.products.getAll();
+      const result = await api.products.getAll({ page, limit });
       if (result.success) {
         setProducts(result.data);
+        setTotalCount(result.totalCount ?? 0);
       }
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -829,6 +837,32 @@ export default function ProductsPage() {
             </tbody>
           </table>
         </div>
+
+        {totalCount > limit && (
+          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+            <p className="text-sm text-gray-600">
+              Showing {(page - 1) * limit + 1}–{Math.min(page * limit, totalCount)} of {totalCount}
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+                className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page * limit >= totalCount}
+                className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

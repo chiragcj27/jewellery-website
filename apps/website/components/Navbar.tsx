@@ -1,13 +1,25 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import PreHeader from "./pre-header";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
+import { useAuth } from "@/context/AuthProvider";
+import { api } from "@/lib/api";
+
+interface CategoryNavItem {
+  _id: string;
+  name: string;
+  slug: string;
+  isActive?: boolean;
+  displayOrder?: number;
+}
 
 export default function Navbar() {
+  const { user, logout, isWholesaler } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [categories, setCategories] = useState<CategoryNavItem[]>([]);
   // useSyncExternalStore avoids hydration mismatch: server snapshot is 0, client uses persisted cart.
   const cartItemCount = useSyncExternalStore(
     (onStoreChange) => useCartStore.subscribe(onStoreChange),
@@ -19,6 +31,32 @@ export default function Navbar() {
     () => useWishlistStore.getState().getCount(),
     () => 0
   );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    api.categories
+      .getAll()
+      .then((result) => {
+        if (!isMounted) return;
+        if (result?.success && Array.isArray(result.data)) {
+          const activeSorted = [...result.data]
+            .filter((category: CategoryNavItem) => category.isActive !== false)
+            .sort(
+              (a: CategoryNavItem, b: CategoryNavItem) =>
+                (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
+            );
+          setCategories(activeSorted);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching categories for navbar:", error);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <>
@@ -66,27 +104,63 @@ export default function Navbar() {
 
           {/* User Icons */}
           <div className="flex items-center gap-4 shrink-0">
-            {/* Profile Icon */}
-            <Link
-              href="/auth"
-              className="relative text-black hover:opacity-70 transition-opacity"
-              aria-label="Account"
-            >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            {isWholesaler && (
+              <span className="text-xs font-medium uppercase tracking-wide text-black/70 bg-amber-100 px-2 py-1 rounded">
+                Business
+              </span>
+            )}
+            {/* Profile / Account */}
+            {user ? (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/auth"
+                  className="relative text-black hover:opacity-70 transition-opacity flex items-center gap-1.5"
+                  aria-label="Account"
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <span className="text-sm font-medium hidden sm:inline truncate max-w-[100px]">{user.name}</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => logout()}
+                  className="text-xs text-black/55 hover:text-black transition-colors"
+                >
+                  Log out
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/auth"
+                className="relative text-black hover:opacity-70 transition-opacity"
+                aria-label="Sign in"
               >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full"></span>
-            </Link>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </Link>
+            )}
 
             {/* Wishlist Icon with Badge */}
             <Link
@@ -145,17 +219,62 @@ export default function Navbar() {
       <div className="border-t border-gray-200">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-center gap-8 flex-wrap">
-            <NavLink href="/22kt-ready"><span className ="text-[16px] font-semibold ">22KT Ready</span></NavLink>
-            <NavLink href="/18kt-ready"><span className ="text-[16px] font-semibold ">18KT Ready</span></NavLink>
-            <NavLink href="/9kt-ready"><span className ="text-[16px] font-semibold ">9KT Ready</span></NavLink>
-            <NavLink href="/22kt-order"><span className ="text-[16px] font-semibold ">22KT Order</span></NavLink>
-            <NavLink href="/18kt-order"><span className ="text-[16px] font-semibold ">18KT Order</span></NavLink>
-            <NavLink href="/20kt-order"><span className ="text-[16px] font-semibold ">20KT Order</span></NavLink>
-            <NavLink href="/14kt-9kt-order"><span className ="text-[16px] font-semibold ">14KT &amp; 9KT Order</span></NavLink>
-            <NavLink href="/silver-ready"><span className ="text-[16px] font-semibold ">Silver Ready</span></NavLink>
-            <NavLink href="/platinum-order"><span className ="text-[16px] font-semibold ">Platinum Order</span></NavLink>
-            <NavLink href="/lab-grown-order"><span className ="text-[16px] font-semibold ">Lab Grown Order</span></NavLink>
-            <NavLink href="/coins"><span className ="text-[16px] font-semibold ">Coins</span></NavLink>
+            {categories.length > 0 ? (
+              categories.map((category) => (
+                <NavLink
+                  key={category._id}
+                  href={`/category/${category.slug}`}
+                >
+                  <span className="text-[16px] font-semibold ">
+                    {category.name}
+                  </span>
+                </NavLink>
+              ))
+            ) : (
+              <>
+                <NavLink href="/22kt-ready">
+                  <span className="text-[16px] font-semibold ">22KT Ready</span>
+                </NavLink>
+                <NavLink href="/18kt-ready">
+                  <span className="text-[16px] font-semibold ">18KT Ready</span>
+                </NavLink>
+                <NavLink href="/9kt-ready">
+                  <span className="text-[16px] font-semibold ">9KT Ready</span>
+                </NavLink>
+                <NavLink href="/22kt-order">
+                  <span className="text-[16px] font-semibold ">22KT Order</span>
+                </NavLink>
+                <NavLink href="/18kt-order">
+                  <span className="text-[16px] font-semibold ">18KT Order</span>
+                </NavLink>
+                <NavLink href="/20kt-order">
+                  <span className="text-[16px] font-semibold ">20KT Order</span>
+                </NavLink>
+                <NavLink href="/14kt-9kt-order">
+                  <span className="text-[16px] font-semibold ">
+                    14KT &amp; 9KT Order
+                  </span>
+                </NavLink>
+                <NavLink href="/silver-ready">
+                  <span className="text-[16px] font-semibold ">
+                    Silver Ready
+                  </span>
+                </NavLink>
+                <NavLink href="/platinum-order">
+                  <span className="text-[16px] font-semibold ">
+                    Platinum Order
+                  </span>
+                </NavLink>
+                <NavLink href="/lab-grown-order">
+                  <span className="text-[16px] font-semibold ">
+                    Lab Grown Order
+                  </span>
+                </NavLink>
+                <NavLink href="/coins">
+                  <span className="text-[16px] font-semibold ">Coins</span>
+                </NavLink>
+              </>
+            )}
           </div>
         </div>
       </div>

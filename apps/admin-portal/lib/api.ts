@@ -47,6 +47,7 @@ export interface ProductData {
   metadata?: Record<string, unknown>;
   weightInGrams?: number;
   metalType?: string;
+  wastagePercentage?: number;
   useDynamicPricing?: boolean;
 }
 
@@ -118,14 +119,14 @@ export const api = {
     }).then(res => res.json()),
   },
   products: {
-    getAll: (categoryId?: string, subcategoryId?: string) => {
+    getAll: (opts?: { categoryId?: string; subcategoryId?: string; page?: number; limit?: number }) => {
       const params = new URLSearchParams();
-      if (categoryId) params.append('categoryId', categoryId);
-      if (subcategoryId) params.append('subcategoryId', subcategoryId);
+      if (opts?.categoryId) params.append('categoryId', opts.categoryId);
+      if (opts?.subcategoryId) params.append('subcategoryId', opts.subcategoryId);
+      if (opts?.page) params.append('page', String(opts.page));
+      if (opts?.limit) params.append('limit', String(opts.limit));
       const query = params.toString();
-      const url = query 
-        ? `${API_BASE_URL}/api/products?${query}`
-        : `${API_BASE_URL}/api/products`;
+      const url = query ? `${API_BASE_URL}/api/products?${query}` : `${API_BASE_URL}/api/products`;
       return fetch(url).then(res => res.json());
     },
     getById: (id: string) => fetch(`${API_BASE_URL}/api/products/${id}`).then(res => res.json()),
@@ -169,6 +170,44 @@ export const api = {
           document.body.removeChild(a);
         });
     },
+  },
+  wholesalers: {
+    getAll: (status?: 'pending' | 'approved' | 'rejected') => {
+      const url = status
+        ? `${API_BASE_URL}/api/wholesalers?status=${status}`
+        : `${API_BASE_URL}/api/wholesalers`;
+      return fetch(url).then(res => res.json());
+    },
+    approve: (id: string) =>
+      fetch(`${API_BASE_URL}/api/wholesalers/${id}/approve`, {
+        method: 'PATCH',
+      }).then(res => res.json()),
+    reject: (id: string, reason?: string) =>
+      fetch(`${API_BASE_URL}/api/wholesalers/${id}/reject`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reason || '' }),
+      }).then(res => res.json()),
+  },
+  customers: {
+    getAll: () =>
+      fetch(`${API_BASE_URL}/api/customers`).then(res => res.json()),
+  },
+  orders: {
+    getAll: (status?: string) => {
+      const url = status
+        ? `${API_BASE_URL}/api/orders?status=${status}`
+        : `${API_BASE_URL}/api/orders`;
+      return fetch(url).then((res) => res.json());
+    },
+    getById: (id: string) =>
+      fetch(`${API_BASE_URL}/api/orders/${id}`).then((res) => res.json()),
+    updateStatus: (id: string, status: string) =>
+      fetch(`${API_BASE_URL}/api/orders/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      }).then((res) => res.json()),
   },
   metalRates: {
     getAll: (active?: boolean) => {

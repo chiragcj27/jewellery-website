@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
+import { useAuth } from "@/context/AuthProvider";
 import ProductCard from "@/components/product-card";
 
 // Sample product data - replace with actual data from props/API
@@ -16,6 +17,9 @@ const product = {
     currentPrice: "₹2,229",
     savings: "30%",
     sku: "PM-BRACELETS-035",
+    metalType: "22KT",
+    weightInGrams: 5.2,
+    wastagePercentage: 8,
     images: [
       "https://palmonas.com/cdn/shop/files/preview_images/f99b0ab216d343f78d7fdf847c694775.thumbnail.0000000000.jpg?v=1754386713&width=1600",
       "https://palmonas.com/cdn/shop/files/PM-BRACELETS-035_2_0040.jpg?v=1744528665",
@@ -82,6 +86,7 @@ const RELATED_PRODUCTS = [
 ];
 
 export default function ProductPage() {
+  const { isWholesaler } = useAuth();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [isSpecificationOpen, setIsSpecificationOpen] = useState(false);
@@ -91,6 +96,7 @@ export default function ProductPage() {
   const isWishlisted = useWishlistStore((state) =>
     state.isInWishlist(product.sku)
   );
+  const showWholesalerView = isWholesaler && (product.metalType != null || product.weightInGrams != null);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % product.images.length);
@@ -110,14 +116,28 @@ export default function ProductPage() {
   };
 
   const handleAddToCart = () => {
-    addItem({
-      id: product.sku, // Using SKU as unique ID
-      title: product.title,
-      image: product.images[0],
-      price: parsePrice(product.currentPrice),
-      mrp: parsePrice(product.mrp),
-      sku: product.sku,
-    });
+    if (showWholesalerView && product.weightInGrams != null && product.metalType) {
+      addItem({
+        id: product.sku,
+        title: product.title,
+        image: product.images[0],
+        price: 0,
+        mrp: 0,
+        sku: product.sku,
+        weightInGrams: product.weightInGrams,
+        metalType: product.metalType,
+        wastagePercentage: (product as { wastagePercentage?: number }).wastagePercentage,
+      });
+    } else {
+      addItem({
+        id: product.sku,
+        title: product.title,
+        image: product.images[0],
+        price: parsePrice(product.currentPrice),
+        mrp: parsePrice(product.mrp),
+        sku: product.sku,
+      });
+    }
   };
 
   return (
@@ -244,17 +264,43 @@ export default function ProductPage() {
               </div>
             </div>
 
-            {/* Pricing Information */}
+            {/* Pricing Information (retail) or Purity/Wastage (wholesaler) */}
             <div className="space-y-2">
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className="text-sm text-gray-500 line-through">{product.mrp}</span>
-                <span className="text-2xl md:text-3xl font-bold text-black">{product.currentPrice}</span>
-                <span className="px-2 py-1 bg-black text-white text-xs font-semibold uppercase">
-                  SAVE {product.savings}
-                </span>
-              </div>
-              <p className="text-sm text-gray-500">Inclusive of all taxes</p>
-              <p className="text-sm text-gray-500">SKU: {product.sku}</p>
+              {showWholesalerView ? (
+                <>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {(product as { metalType?: string }).metalType && (
+                      <span className="text-lg font-semibold text-black">
+                        Purity: {(product as { metalType: string }).metalType}
+                      </span>
+                    )}
+                    {(product as { weightInGrams?: number }).weightInGrams != null && (
+                      <span className="text-lg font-semibold text-black">
+                        {(product as { weightInGrams: number }).weightInGrams}g
+                      </span>
+                    )}
+                    {(product as { wastagePercentage?: number }).wastagePercentage != null && (
+                      <span className="text-lg font-semibold text-black">
+                        Wastage: {(product as { wastagePercentage: number }).wastagePercentage}%
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 italic">Price calculated at checkout</p>
+                  <p className="text-sm text-gray-500">SKU: {product.sku}</p>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-sm text-gray-500 line-through">{product.mrp}</span>
+                    <span className="text-2xl md:text-3xl font-bold text-black">{product.currentPrice}</span>
+                    <span className="px-2 py-1 bg-black text-white text-xs font-semibold uppercase">
+                      SAVE {product.savings}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500">Inclusive of all taxes</p>
+                  <p className="text-sm text-gray-500">SKU: {product.sku}</p>
+                </>
+              )}
             </div>
 
             {/* Offers Section */}

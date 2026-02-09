@@ -1,5 +1,3 @@
-import PreHeader from "@/components/pre-header";
-import Navbar from "@/components/Navbar";
 import Banner from "@/components/banner";
 import CategoryCarousel from "@/components/category-carousel";
 import TopStylesSection from "@/components/top-styles-section";
@@ -8,7 +6,7 @@ import FeaturedBanner from "@/components/featured-banner";
 import ImageCaraousel from "@/components/image-caraousel";
 import ProductCard from "@/components/product-card";
 import ShopWithConfidence from "@/components/shop-with-confidence";
-import Footer from "@/components/footer";
+
 
 const CATEGORIES = [
   {
@@ -181,7 +179,6 @@ export default function Home() {
         </div>
       </section>
       <ShopWithConfidence />
-      <Footer />
     </div>
   );
 }

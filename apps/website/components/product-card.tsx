@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthProvider";
 
 export interface ProductCardProps {
   image: string;
@@ -12,6 +14,10 @@ export interface ProductCardProps {
   offerTag?: string;
   metalType?: string;
   weightInGrams?: number;
+  wastagePercentage?: number;
+  /** Product id/slug for link (e.g. product/[slug]) */
+  productId?: string;
+  sku?: string;
 }
 
 export default function ProductCard({
@@ -23,8 +29,13 @@ export default function ProductCard({
   offerTag = "Buy 1 Get 1",
   metalType,
   weightInGrams,
+  wastagePercentage,
+  productId,
+  sku,
 }: ProductCardProps) {
+  const { isWholesaler } = useAuth();
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const showWholesalerView = isWholesaler && (metalType != null || weightInGrams != null || wastagePercentage != null);
 
   return (
     <article className="flex flex-col bg-white rounded-none overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 min-w-[220px]">
@@ -83,27 +94,50 @@ export default function ProductCard({
       {/* Details */}
       <div className="px-3 pt-3 pb-4 space-y-1 bg-white">
         <h3 className="text-sm font-medium text-gray-900 line-clamp-2 min-h-10">
-          {title}
+          {productId ? (
+            <Link href={productId} className="hover:underline">
+              {title}
+            </Link>
+          ) : (
+            title
+          )}
         </h3>
-        {/* Metal type and weight info */}
-        {metalType && weightInGrams && (
-          <div className="text-xs text-gray-500">
-            {metalType} • {weightInGrams}g
+        {/* Wholesaler: show purity (metalType) and wastage instead of price */}
+        {showWholesalerView ? (
+          <div className="text-xs text-gray-700 space-y-0.5">
+            {metalType && <div>Purity: {metalType}</div>}
+            {(weightInGrams != null || wastagePercentage != null) && (
+              <div>
+                {weightInGrams != null && <span>{weightInGrams}g</span>}
+                {weightInGrams != null && wastagePercentage != null && " • "}
+                {wastagePercentage != null && <span>Wastage: {wastagePercentage}%</span>}
+              </div>
+            )}
+            <div className="text-gray-500 italic">Price at checkout</div>
           </div>
+        ) : (
+          <>
+            {/* Metal type and weight info (retail) */}
+            {metalType && weightInGrams && (
+              <div className="text-xs text-gray-500">
+                {metalType} • {weightInGrams}g
+              </div>
+            )}
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-semibold text-gray-900">{currentPrice}</span>
+              {originalPrice && (
+                <span className="text-xs text-gray-500 line-through">
+                  {originalPrice}
+                </span>
+              )}
+              {discountLabel && (
+                <span className="text-xs font-semibold text-green-600">
+                  {discountLabel}
+                </span>
+              )}
+            </div>
+          </>
         )}
-        <div className="flex items-center gap-2 text-sm">
-          <span className="font-semibold text-gray-900">{currentPrice}</span>
-          {originalPrice && (
-            <span className="text-xs text-gray-500 line-through">
-              {originalPrice}
-            </span>
-          )}
-          {discountLabel && (
-            <span className="text-xs font-semibold text-green-600">
-              {discountLabel}
-            </span>
-          )}
-        </div>
       </div>
     </article>
   );

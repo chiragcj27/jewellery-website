@@ -29,6 +29,7 @@ interface ExcelRow {
   filterValues?: string; // JSON string of filter values
   weightInGrams?: number | string; // Weight in grams for jewellery
   metalType?: string; // e.g., "22KT", "18KT", "20KT"
+  wastagePercentage?: number | string; // e.g. 8 = 8% wastage (for wholesaler display & calculation)
   useDynamicPricing?: boolean | string; // Use weight-based pricing
 }
 
@@ -218,6 +219,16 @@ async function validateRow(
       field: 'stock',
       message: 'Stock must be >= 0',
       value: row.stock,
+    });
+  }
+
+  const wastagePercentage = parseNumber(row.wastagePercentage);
+  if (wastagePercentage !== undefined && wastagePercentage < 0) {
+    errors.push({
+      row: rowIndex,
+      field: 'wastagePercentage',
+      message: 'Wastage percentage must be >= 0',
+      value: row.wastagePercentage,
     });
   }
 
@@ -444,6 +455,7 @@ export async function bulkUpload(req: Request, res: Response): Promise<void> {
           filterValues: parseFilterValues(row.filterValues),
           weightInGrams: parseNumber(row.weightInGrams),
           metalType: row.metalType ? String(row.metalType).trim() : undefined,
+          wastagePercentage: parseNumber(row.wastagePercentage),
           useDynamicPricing: row.useDynamicPricing !== undefined ? parseBoolean(row.useDynamicPricing) : false,
         };
 
@@ -516,6 +528,7 @@ export async function downloadTemplate(_req: Request, res: Response): Promise<vo
         filterValues: '{"material":"Gold","color":"Yellow"}',
         weightInGrams: 5.5,
         metalType: '22KT',
+        wastagePercentage: 8,
         useDynamicPricing: false,
       },
     ];
@@ -563,7 +576,8 @@ export async function downloadTemplate(_req: Request, res: Response): Promise<vo
       { Instruction: '6. Check the Reference sheet for valid categories and subcategories' },
       { Instruction: '7. Boolean fields accept: true/false, yes/no, 1/0' },
       { Instruction: '8. Metal types: 22KT, 18KT, 20KT, 24KT, Silver, Platinum, etc.' },
-      { Instruction: '9. Upload just the Excel file, or a ZIP containing Excel + image files' },
+      { Instruction: '9. wastagePercentage: Optional percentage for wastage (e.g., 8 = 8%)' },
+      { Instruction: '10. Upload just the Excel file, or a ZIP containing Excel + image files' },
     ];
     const instructionsSheet = XLSX.utils.json_to_sheet(instructions);
     XLSX.utils.book_append_sheet(workbook, instructionsSheet, 'Instructions');

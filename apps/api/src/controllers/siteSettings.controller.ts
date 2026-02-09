@@ -13,6 +13,7 @@ export const getSiteSettings = async (_req: Request, res: Response) => {
       settings = await SiteSettings.create({
         preHeaderText: '✨ Free shipping on orders over $150',
         preHeaderLink: '',
+        whatsappEnquiryNumber: '',
       });
     }
 
@@ -31,24 +32,20 @@ export const getSiteSettings = async (_req: Request, res: Response) => {
  */
 export const updateSiteSettings = async (req: Request, res: Response) => {
   try {
-    const { preHeaderText, preHeaderLink } = req.body;
+    const { preHeaderText, preHeaderLink, whatsappEnquiryNumber } = req.body;
 
     let settings = await SiteSettings.findOne();
 
     if (!settings) {
-      // Create new settings if none exist
       settings = await SiteSettings.create({
         preHeaderText: preHeaderText || '✨ Free shipping on orders over $150',
         preHeaderLink: preHeaderLink || '',
+        whatsappEnquiryNumber: whatsappEnquiryNumber || '',
       });
     } else {
-      // Update existing settings
-      if (preHeaderText !== undefined) {
-        settings.preHeaderText = preHeaderText;
-      }
-      if (preHeaderLink !== undefined) {
-        settings.preHeaderLink = preHeaderLink;
-      }
+      if (preHeaderText !== undefined) settings.preHeaderText = preHeaderText;
+      if (preHeaderLink !== undefined) settings.preHeaderLink = preHeaderLink;
+      if (whatsappEnquiryNumber !== undefined) settings.whatsappEnquiryNumber = whatsappEnquiryNumber;
       await settings.save();
     }
 

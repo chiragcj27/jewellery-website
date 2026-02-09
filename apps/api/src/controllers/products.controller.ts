@@ -15,12 +15,22 @@ export async function getAll(req: Request, res: Response): Promise<void> {
     if (categoryId) query.category = new mongoose.Types.ObjectId(categoryId);
     if (subcategoryId) query.subcategory = new mongoose.Types.ObjectId(subcategoryId);
 
-    const products = await Product.find(query as mongoose.FilterQuery<IProduct>)
-      .populate('category', 'name slug')
-      .populate('subcategory', 'name slug')
-      .sort({ displayOrder: 1, createdAt: -1 });
+    const page = Math.max(1, parseInt(String(req.query.page || '1'), 10));
+    const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit || '50'), 10)));
+    const skip = (page - 1) * limit;
 
-    res.json({ success: true, data: products });
+    const [products, totalCount] = await Promise.all([
+      Product.find(query as mongoose.FilterQuery<IProduct>)
+        .populate('category', 'name slug')
+        .populate('subcategory', 'name slug')
+        .sort({ displayOrder: 1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Product.countDocuments(query as mongoose.FilterQuery<IProduct>),
+    ]);
+
+    res.json({ success: true, data: products, totalCount, page, limit });
   } catch (error: unknown) {
     console.error('Error fetching products:', error);
     res.status(500).json({ success: false, error: getErrorMessage(error) });
@@ -80,6 +90,7 @@ export async function create(req: Request, res: Response): Promise<void> {
       metadata,
       weightInGrams,
       metalType,
+      wastagePercentage,
       useDynamicPricing,
     } = req.body;
 
@@ -147,6 +158,7 @@ export async function create(req: Request, res: Response): Promise<void> {
       metadata: metadata || {},
       weightInGrams: weightInGrams !== undefined ? weightInGrams : undefined,
       metalType: metalType || undefined,
+      wastagePercentage: wastagePercentage !== undefined ? wastagePercentage : undefined,
       useDynamicPricing: useDynamicPricing || false,
     });
 
@@ -217,6 +229,7 @@ export async function update(req: Request, res: Response): Promise<void> {
       metadata,
       weightInGrams,
       metalType,
+      wastagePercentage,
       useDynamicPricing,
     } = req.body;
 
@@ -267,6 +280,7 @@ export async function update(req: Request, res: Response): Promise<void> {
     if (metadata !== undefined) updateData.metadata = metadata;
     if (weightInGrams !== undefined) updateData.weightInGrams = weightInGrams;
     if (metalType !== undefined) updateData.metalType = metalType;
+    if (wastagePercentage !== undefined) updateData.wastagePercentage = wastagePercentage;
     if (useDynamicPricing !== undefined) updateData.useDynamicPricing = useDynamicPricing;
 
     const product = await Product.findByIdAndUpdate(req.params.id, updateData, {

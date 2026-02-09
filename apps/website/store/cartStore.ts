@@ -9,6 +9,12 @@ export interface CartItem {
   mrp: number;
   quantity: number;
   sku: string;
+  /** Wholesaler: weight in grams for price calculation at checkout */
+  weightInGrams?: number;
+  /** Wholesaler: metal type (purity) e.g. 22KT */
+  metalType?: string;
+  /** Wholesaler: wastage percentage e.g. 8 */
+  wastagePercentage?: number;
 }
 
 interface CartStore {

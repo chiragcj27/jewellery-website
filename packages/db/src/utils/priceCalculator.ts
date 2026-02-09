@@ -67,6 +67,17 @@ export function formatPrice(price: number, currency: string = '₹'): string {
 }
 
 /**
+ * Effective weight including wastage (for wholesaler pricing).
+ * e.g. 10g with 8% wastage => 10.8g
+ */
+export function getEffectiveWeight(
+  weightInGrams: number,
+  wastagePercentage: number = 0
+): number {
+  return weightInGrams * (1 + wastagePercentage / 100);
+}
+
+/**
  * Validate if a product can use dynamic pricing
  */
 export function canUseDynamicPricing(

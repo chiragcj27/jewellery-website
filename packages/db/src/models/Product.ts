@@ -21,7 +21,8 @@ export interface IProduct extends Document {
   metadata?: Record<string, unknown>;
   // Weight-based pricing fields
   weightInGrams?: number; // Weight in grams
-  metalType?: string; // e.g., "22KT", "18KT", "20KT", etc.
+  metalType?: string; // e.g., "22KT", "18KT", "20KT", etc. (purity)
+  wastagePercentage?: number; // e.g. 8 = 8% wastage (for wholesaler display & calculation)
   useDynamicPricing: boolean; // If true, calculate price from weight and metal rate
   createdAt: Date;
   updatedAt: Date;
@@ -108,6 +109,10 @@ const ProductSchema: Schema = new Schema(
       type: String,
       trim: true,
     },
+    wastagePercentage: {
+      type: Number,
+      min: 0,
+    },
     useDynamicPricing: {
       type: Boolean,
       default: false,
@@ -123,6 +128,7 @@ ProductSchema.index({ category: 1, subcategory: 1, slug: 1 }, { unique: true });
 ProductSchema.index({ category: 1, subcategory: 1 });
 ProductSchema.index({ isActive: 1, isFeatured: 1 });
 ProductSchema.index({ displayOrder: 1 });
+ProductSchema.index({ displayOrder: 1, createdAt: -1 }); // For sorted list queries (avoids memory sort)
 ProductSchema.index({ metalType: 1 });
 ProductSchema.index({ useDynamicPricing: 1 });
 

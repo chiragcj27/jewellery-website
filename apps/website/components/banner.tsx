@@ -117,7 +117,7 @@ export default function Banner() {
 
   if (loading) {
     return (
-      <div className="relative w-full h-[600px] overflow-hidden bg-gray-200 animate-pulse">
+      <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden bg-gray-200 animate-pulse">
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-gray-400">Loading...</div>
         </div>
@@ -126,7 +126,7 @@ export default function Banner() {
   }
 
   return (
-    <div className="relative w-full h-[600px] overflow-hidden">
+    <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden">
       {/* Slides Container */}
       <div
         className="flex transition-transform duration-700 ease-in-out h-full"
@@ -191,12 +191,11 @@ export default function Banner() {
       {/* Navigation Arrows */}
       <button
         onClick={goToPrevious}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all duration-200 backdrop-blur-sm"
+        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all duration-200 backdrop-blur-sm"
         aria-label="Previous slide"
       >
         <svg
-          width="24"
-          height="24"
+          className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -210,12 +209,11 @@ export default function Banner() {
 
       <button
         onClick={goToNext}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all duration-200 backdrop-blur-sm"
+        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all duration-200 backdrop-blur-sm"
         aria-label="Next slide"
       >
         <svg
-          width="24"
-          height="24"
+          className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -228,15 +226,15 @@ export default function Banner() {
       </button>
 
       {/* Slide Indicators (optional) */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+      <div className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 sm:gap-2">
         {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+            className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${
               index === currentSlide
-                ? "bg-white w-8"
-                : "bg-white/50 hover:bg-white/75"
+                ? "bg-white w-6 sm:w-8"
+                : "bg-white/50 hover:bg-white/75 w-1.5 sm:w-2"
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />

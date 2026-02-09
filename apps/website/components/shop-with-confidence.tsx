@@ -9,7 +9,7 @@ const FEATURES = [
         fill="none"
         stroke="currentColor"
         strokeWidth="1.5"
-        className="w-14 h-14 mx-auto"
+        className="w-full h-full"
         aria-hidden
       >
         <circle cx="32" cy="32" r="14" />
@@ -30,7 +30,7 @@ const FEATURES = [
         fill="none"
         stroke="currentColor"
         strokeWidth="1.5"
-        className="w-14 h-14 mx-auto"
+        className="w-full h-full"
         aria-hidden
       >
         <rect x="14" y="24" width="36" height="12" rx="2" />
@@ -49,7 +49,7 @@ const FEATURES = [
         fill="none"
         stroke="currentColor"
         strokeWidth="1.5"
-        className="w-14 h-14 mx-auto"
+        className="w-full h-full"
         aria-hidden
       >
         <path d="M32 10 L44 26 L32 54 L20 26 Z" />
@@ -69,24 +69,28 @@ const FEATURES = [
 export default function ShopWithConfidence() {
   return (
     <section
-      className="w-full bg-[#f8f8f8] py-16 md:py-20"
+      className="w-full bg-[#f8f8f8] py-10 sm:py-12 md:py-16 lg:py-20"
       aria-labelledby="shop-with-confidence-heading"
     >
       <div className="container mx-auto px-4">
         <h2
           id="shop-with-confidence-heading"
-          className="text-2xl md:text-3xl font-bold text-center text-black uppercase tracking-wide mb-12 md:mb-16"
+          className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-black uppercase tracking-wide mb-8 sm:mb-10 md:mb-12 lg:mb-16"
         >
           Shop with Confidence
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10 md:gap-12 max-w-5xl mx-auto">
           {FEATURES.map((feature) => (
             <div key={feature.title} className="flex flex-col">
-              <div className="text-black mb-4 flex justify-center">{feature.icon}</div>
-              <h3 className="text-sm font-bold text-black uppercase tracking-wide mb-3 text-center">
+              <div className="text-black mb-3 sm:mb-4 flex justify-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14">
+                  {feature.icon}
+                </div>
+              </div>
+              <h3 className="text-xs sm:text-sm font-bold text-black uppercase tracking-wide mb-2 sm:mb-3 text-center">
                 {feature.title}
               </h3>
-              <p className="text-black/90 text-sm leading-relaxed text-left">
+              <p className="text-black/90 text-xs sm:text-sm leading-relaxed text-left">
                 {feature.description}
               </p>
             </div>

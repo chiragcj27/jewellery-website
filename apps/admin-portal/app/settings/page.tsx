@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { api } from '@/lib/api';
 
 interface SiteSettings {
   _id: string;
@@ -11,8 +12,6 @@ interface SiteSettings {
   createdAt: string;
   updatedAt: string;
 }
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
@@ -35,13 +34,13 @@ export default function SettingsPage() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${API_BASE_URL}/api/site-settings`);
+      const result = await api.siteSettings.get();
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch settings');
+      if (!result || result.error) {
+        throw new Error(result?.error || 'Failed to fetch settings');
       }
       
-      const data = await response.json();
+      const data = result;
       setSettings(data);
       setFormData({
         preHeaderText: data.preHeaderText || '',
@@ -64,19 +63,13 @@ export default function SettingsPage() {
       setError(null);
       setSuccessMessage(null);
 
-      const response = await fetch(`${API_BASE_URL}/api/site-settings`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      const result = await api.siteSettings.update(formData);
 
-      if (!response.ok) {
-        throw new Error('Failed to update settings');
+      if (!result || result.error) {
+        throw new Error(result?.error || 'Failed to update settings');
       }
 
-      const data = await response.json();
+      const data = result;
       setSettings(data);
       setSuccessMessage('Settings updated successfully!');
       

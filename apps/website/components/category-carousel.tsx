@@ -24,7 +24,15 @@ export default function CategoryCarousel({ categories }: CategoryCarouselProps) 
     middleOffset + Math.floor((originalLength > 0 ? originalLength : 1) / 2);
 
   const [activeIndex, setActiveIndex] = useState(initialIndex);
+  const [windowWidth, setWindowWidth] = useState(1024);
   const carouselRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const updateWidth = () => setWindowWidth(window.innerWidth);
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
+  }, []);
 
   const handlePrev = () => {
     setActiveIndex((prev) => prev - 1);
@@ -62,15 +70,15 @@ export default function CategoryCarousel({ categories }: CategoryCarouselProps) 
   }, [activeIndex, originalLength]);
 
   return (
-    <div className="relative w-full py-12 overflow-hidden">
+    <div className="relative w-full py-6 sm:py-8 md:py-12 overflow-hidden">
       {/* Navigation Arrow - Left */}
       <button
         onClick={handlePrev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white/90 shadow-lg flex items-center justify-center hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+        className="absolute left-1 sm:left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-white/90 shadow-lg flex items-center justify-center hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
         aria-label="Previous category"
       >
         <svg
-          className="w-6 h-6 text-black"
+          className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-black"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -87,11 +95,11 @@ export default function CategoryCarousel({ categories }: CategoryCarouselProps) 
       {/* Navigation Arrow - Right */}
       <button
         onClick={handleNext}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white/90 shadow-lg flex items-center justify-center hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+        className="absolute right-1 sm:right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-white/90 shadow-lg flex items-center justify-center hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
         aria-label="Next category"
       >
         <svg
-          className="w-6 h-6 text-black"
+          className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-black"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -108,7 +116,7 @@ export default function CategoryCarousel({ categories }: CategoryCarouselProps) 
       {/* Carousel Container */}
       <div
         ref={carouselRef}
-        className="flex gap-0 px-20 overflow-x-auto scrollbar-hide items-center"
+        className="flex gap-0 px-8 sm:px-12 md:px-16 lg:px-20 overflow-x-auto scrollbar-hide items-center"
         style={{
           scrollSnapType: "x mandatory",
           scrollBehavior: "smooth",
@@ -125,10 +133,14 @@ export default function CategoryCarousel({ categories }: CategoryCarouselProps) 
             ? repeatedCategories.length + 1
             : repeatedCategories.length - distance;
           
-          // Base card dimensions - larger for center card focus,
-          // slightly narrower side cards so spacing feels tighter
-          const baseWidth = isActive ? 460 : 360;
-          const baseHeight = isActive ? 620 : 480; // 3:4 aspect ratio
+          // Base card dimensions - responsive sizes
+          // Mobile: smaller cards, Desktop: larger cards
+          const baseWidth = isActive 
+            ? windowWidth < 640 ? 280 : windowWidth < 1024 ? 380 : 460
+            : windowWidth < 640 ? 220 : windowWidth < 1024 ? 300 : 360;
+          const baseHeight = isActive 
+            ? windowWidth < 640 ? 380 : windowWidth < 1024 ? 510 : 620
+            : windowWidth < 640 ? 300 : windowWidth < 1024 ? 400 : 480;
 
           const cardContent = (
             <div
@@ -184,10 +196,10 @@ export default function CategoryCarousel({ categories }: CategoryCarouselProps) 
                   )}
                   
                   {/* Category label */}
-                  <span className={`text-white uppercase tracking-wider font-semibold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] text-center px-4 ${
+                  <span className={`text-white uppercase tracking-wider font-semibold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] text-center px-2 sm:px-4 ${
                     isActive 
-                      ? 'text-2xl sm:text-3xl md:text-4xl' 
-                      : 'text-lg sm:text-xl md:text-2xl'
+                      ? 'text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl' 
+                      : 'text-sm sm:text-base md:text-lg lg:text-xl'
                   }`}>
                     {category.label}
                   </span>

@@ -59,6 +59,20 @@ export interface MetalRateData {
   isActive?: boolean;
 }
 
+export interface SiteSettingsData {
+  preHeaderText?: string;
+  preHeaderLink?: string;
+  whatsappEnquiryNumber?: string;
+}
+
+export interface BannerData {
+  image: string;
+  link?: string;
+  title?: string;
+  isActive?: boolean;
+  displayOrder?: number;
+}
+
 export const api = {
   assets: {
     upload: (file: File) => {
@@ -229,6 +243,36 @@ export const api = {
       body: JSON.stringify(data),
     }).then(res => res.json()),
     delete: (id: string) => fetch(`${API_BASE_URL}/api/metal-rates/${id}`, {
+      method: 'DELETE',
+    }).then(res => res.json()),
+  },
+  siteSettings: {
+    get: () => fetch(`${API_BASE_URL}/api/site-settings`).then(res => res.json()),
+    update: (data: SiteSettingsData) => fetch(`${API_BASE_URL}/api/site-settings`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(res => res.json()),
+  },
+  banners: {
+    getAll: (active?: boolean) => {
+      const url = active !== undefined 
+        ? `${API_BASE_URL}/api/banners?active=${active}`
+        : `${API_BASE_URL}/api/banners`;
+      return fetch(url).then(res => res.json());
+    },
+    getById: (id: string) => fetch(`${API_BASE_URL}/api/banners/${id}`).then(res => res.json()),
+    create: (data: BannerData) => fetch(`${API_BASE_URL}/api/banners`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(res => res.json()),
+    update: (id: string, data: Partial<BannerData>) => fetch(`${API_BASE_URL}/api/banners/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(res => res.json()),
+    delete: (id: string) => fetch(`${API_BASE_URL}/api/banners/${id}`, {
       method: 'DELETE',
     }).then(res => res.json()),
   },

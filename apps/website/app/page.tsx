@@ -113,18 +113,18 @@ export default function Home() {
   return (
     <div>
       <Banner />
-      <div className="bg-black/90 w-full h-[40px] flex flex-row">
+      <div className="bg-black/90 w-full h-[32px] sm:h-[36px] md:h-[40px] flex flex-row">
         <Marquee speed={100}>
-          <div className="text-white text-lg px-10">Free shipping on orders over Rs 15,000</div>
-          <div className="text-white text-lg px-10">Free shipping on orders over Rs 15,000</div>
-          <div className="text-white text-lg px-10">Free shipping on orders over Rs 15,000</div>
-          <div className="text-white text-lg px-10">Free shipping on orders over Rs 15,000</div>
-          <div className="text-white text-lg px-10">Free shipping on orders over Rs 15,000</div>
+          <div className="text-white text-xs sm:text-sm md:text-base lg:text-lg px-4 sm:px-6 md:px-10">Free shipping on orders over Rs 15,000</div>
+          <div className="text-white text-xs sm:text-sm md:text-base lg:text-lg px-4 sm:px-6 md:px-10">Free shipping on orders over Rs 15,000</div>
+          <div className="text-white text-xs sm:text-sm md:text-base lg:text-lg px-4 sm:px-6 md:px-10">Free shipping on orders over Rs 15,000</div>
+          <div className="text-white text-xs sm:text-sm md:text-base lg:text-lg px-4 sm:px-6 md:px-10">Free shipping on orders over Rs 15,000</div>
+          <div className="text-white text-xs sm:text-sm md:text-base lg:text-lg px-4 sm:px-6 md:px-10">Free shipping on orders over Rs 15,000</div>
 
         </Marquee>
       </div>
-      <div className="container mx-auto px-4 py-10">
-        <h2 className="text-4xl font-bold text-center mb-10 mt-10">Shop by category</h2>
+      <div className="container mx-auto px-4 py-6 sm:py-8 md:py-10">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-6 sm:mb-8 md:mb-10 mt-6 sm:mt-8 md:mt-10">Shop by category</h2>
       </div>
       <section
         className="w-full"
@@ -140,8 +140,8 @@ export default function Home() {
         />
       </section>
       <section>
-        <div className="container mx-auto px-4 py-10">
-          <h2 className="text-4xl font-bold text-center mt-10 mb-4">
+        <div className="container mx-auto px-4 py-6 sm:py-8 md:py-10">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mt-6 sm:mt-8 md:mt-10 mb-3 sm:mb-4">
             Zivara Top Styles
           </h2>
         </div>
@@ -150,9 +150,9 @@ export default function Home() {
       <FeaturedBanner heading="Glamorous Collection" imageUrl="https://palmonas.com/cdn/shop/files/Home_Page_V4_4.jpg?v=1769580834&width=3840" />
       <ImageCaraousel />
       <FeaturedBanner heading="22KT Special Collection" imageUrl="https://palmonas.com/cdn/shop/files/9KT_flower_Web.png?v=1768650078&width=2000" />
-      <section className="container mx-auto px-4 py-12">
-        <h2 className="text-4xl font-bold text-center mb-10">Featured Products</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+      <section className="container mx-auto px-4 py-8 sm:py-10 md:py-12">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-6 sm:mb-8 md:mb-10">Featured Products</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
           {SAMPLE_PRODUCTS.map((product) => (
             <ProductCard
               key={product.title}
@@ -167,7 +167,7 @@ export default function Home() {
         </div>
       </section>
       <section>
-        <div className="relative w-full h-[520px] sm:h-[600px] md:h-[680px] lg:h-[720px]">
+        <div className="relative w-full h-[300px] sm:h-[400px] md:h-[520px] lg:h-[600px] xl:h-[720px]">
           <video
             className="w-full h-full object-cover"
             src="https://www.pexels.com/download/video/9328454/"

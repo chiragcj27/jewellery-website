@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { api } from '@/lib/api';
 
 interface Banner {
   _id: string;
@@ -14,8 +15,6 @@ interface Banner {
   createdAt: string;
   updatedAt: string;
 }
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export default function BannersPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -41,13 +40,13 @@ export default function BannersPage() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${API_BASE_URL}/api/banners`);
+      const result = await api.banners.getAll();
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch banners');
+      if (!result || result.error) {
+        throw new Error(result?.error || 'Failed to fetch banners');
       }
       
-      const data = await response.json();
+      const data = Array.isArray(result) ? result : [];
       setBanners(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch banners');
@@ -82,42 +81,22 @@ export default function BannersPage() {
       setSuccessMessage(null);
 
       // Upload image first
-      const uploadFormData = new FormData();
-      uploadFormData.append('file', formData.imageFile);
+      const uploadResult = await api.assets.upload(formData.imageFile);
 
-      const uploadResponse = await fetch(`${API_BASE_URL}/api/assets/upload`, {
-        method: 'POST',
-        body: uploadFormData,
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload image');
-      }
-
-      const uploadData = await uploadResponse.json();
-
-      if (!uploadData.success || !uploadData.data?.url) {
-        throw new Error('Invalid upload response');
+      if (!uploadResult.success || !uploadResult.data?.url) {
+        throw new Error(uploadResult.error || 'Failed to upload image');
       }
 
       // Create banner with uploaded image URL
-      const response = await fetch(`${API_BASE_URL}/api/banners`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          image: uploadData.data.url,
-          link: formData.link || '',
-          title: formData.title || '',
-          isActive: true,
-        }),
+      const result = await api.banners.create({
+        image: uploadResult.data.url,
+        link: formData.link || '',
+        title: formData.title || '',
+        isActive: true,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.message || errorData.error || 'Failed to create banner';
-        throw new Error(errorMessage);
+      if (!result || result.error) {
+        throw new Error(result?.error || 'Failed to create banner');
       }
 
       setSuccessMessage('Banner added successfully!');
@@ -151,12 +130,10 @@ export default function BannersPage() {
 
     try {
       setError(null);
-      const response = await fetch(`${API_BASE_URL}/api/banners/${id}`, {
-        method: 'DELETE',
-      });
+      const result = await api.banners.delete(id);
 
-      if (!response.ok) {
-        throw new Error('Failed to delete banner');
+      if (!result || result.error) {
+        throw new Error(result?.error || 'Failed to delete banner');
       }
 
       setSuccessMessage('Banner deleted successfully!');
@@ -174,18 +151,12 @@ export default function BannersPage() {
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
       setError(null);
-      const response = await fetch(`${API_BASE_URL}/api/banners/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          isActive: !currentStatus,
-        }),
+      const result = await api.banners.update(id, {
+        isActive: !currentStatus,
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update banner');
+      if (!result || result.error) {
+        throw new Error(result?.error || 'Failed to update banner');
       }
 
       setSuccessMessage('Banner status updated!');

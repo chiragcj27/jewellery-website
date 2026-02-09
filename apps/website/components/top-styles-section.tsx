@@ -136,7 +136,7 @@ export default function TopStylesSection() {
       <div className="container mx-auto px-4">
         <div className="flex flex-col gap-6">
           {/* Filter buttons row */}
-          <div className="flex flex-wrap gap-3 justify-center">
+          <div className="flex flex-wrap gap-2 sm:gap-3 justify-center px-2">
             {FILTERS.map((filter) => {
               const isActive = filter.value === activeFilter;
               return (
@@ -144,7 +144,7 @@ export default function TopStylesSection() {
                   key={filter.value}
                   type="button"
                   onClick={() => setActiveFilter(filter.value)}
-                  className={`px-5 py-2 text-xs sm:text-sm font-semibold tracking-wide uppercase border transition-colors ${
+                  className={`px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 text-[10px] sm:text-xs md:text-sm font-semibold tracking-wide uppercase border transition-colors ${
                     isActive
                       ? "bg-black text-white border-black"
                       : "bg-white text-gray-900 border-gray-300 hover:bg-black hover:text-white"
@@ -157,9 +157,9 @@ export default function TopStylesSection() {
           </div>
 
           {/* Products row – scrollable on mobile, 4 cards like reference on desktop */}
-          <div className="flex gap-4 overflow-x-auto pb-2 sm:grid sm:grid-cols-4 sm:gap-6 sm:overflow-visible">
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-6 sm:overflow-visible">
             {visibleProducts.slice(0, 4).map((product) => (
-              <div key={product.id} className="shrink-0 sm:shrink min-w-[230px]">
+              <div key={product.id} className="shrink-0 sm:shrink min-w-[160px] sm:min-w-[200px] md:min-w-[230px]">
                 <ProductCard
                   image={product.image}
                   title={product.title}
@@ -172,10 +172,10 @@ export default function TopStylesSection() {
           </div>
 
           {/* View all button */}
-          <div className="flex justify-center pt-2">
+          <div className="flex justify-center pt-2 sm:pt-3">
             <button
               type="button"
-              className="px-8 py-2 border border-gray-900 text-xs sm:text-sm font-semibold uppercase tracking-wide bg-white text-gray-900 hover:bg-black hover:text-white transition-colors"
+              className="px-6 sm:px-8 py-1.5 sm:py-2 border border-gray-900 text-[10px] sm:text-xs md:text-sm font-semibold uppercase tracking-wide bg-white text-gray-900 hover:bg-black hover:text-white transition-colors"
             >
               View All
             </button>

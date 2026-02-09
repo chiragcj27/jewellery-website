@@ -38,11 +38,11 @@ export default function ProductCard({
   const showWholesalerView = isWholesaler && (metalType != null || weightInGrams != null || wastagePercentage != null);
 
   return (
-    <article className="flex flex-col bg-white rounded-none overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 min-w-[220px]">
+    <article className="flex flex-col bg-white rounded-none overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 min-w-[160px] sm:min-w-[200px] md:min-w-[220px]">
       <div className="relative aspect-4/5 bg-[#f8f5ef]">
         {/* Offer tag */}
         {offerTag && (
-          <div className="absolute left-0 top-0 z-10 px-3 py-1 bg-black/80 text-xs font-medium text-white uppercase tracking-wide">
+          <div className="absolute left-0 top-0 z-10 px-2 py-0.5 sm:px-3 sm:py-1 bg-black/80 text-[10px] sm:text-xs font-medium text-white uppercase tracking-wide">
             {offerTag}
           </div>
         )}
@@ -57,18 +57,18 @@ export default function ProductCard({
         />
 
         {/* Bottom controls overlay */}
-        <div className="absolute inset-x-0 bottom-0 flex items-center justify-between px-3 py-3 bg-linear-to-t from-white via-white/95 to-transparent">
+        <div className="absolute inset-x-0 bottom-0 flex items-center justify-between px-2 sm:px-3 py-2 sm:py-3 bg-linear-to-t from-white via-white/95 to-transparent">
           {/* Wishlist button */}
           <button
             type="button"
             onClick={() => setIsWishlisted((v) => !v)}
             aria-pressed={isWishlisted}
             aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-            className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 bg-white text-gray-900 hover:bg-gray-100 transition-colors"
+            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 bg-white text-gray-900 hover:bg-gray-100 transition-colors"
           >
             <svg
               viewBox="0 0 24 24"
-              className={`w-4 h-4 ${
+              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${
                 isWishlisted ? "fill-black text-black" : "text-black"
               }`}
               aria-hidden="true"
@@ -84,7 +84,7 @@ export default function ProductCard({
           {/* Add to bag button */}
           <button
             type="button"
-            className="px-4 py-2 text-xs font-semibold tracking-wide uppercase bg-[#f5f0e6] text-gray-900 border border-gray-300 hover:bg-black hover:text-white transition-colors"
+            className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-semibold tracking-wide uppercase bg-[#f5f0e6] text-gray-900 border border-gray-300 hover:bg-black hover:text-white transition-colors"
           >
             Add to Bag
           </button>
@@ -92,8 +92,8 @@ export default function ProductCard({
       </div>
 
       {/* Details */}
-      <div className="px-3 pt-3 pb-4 space-y-1 bg-white">
-        <h3 className="text-sm font-medium text-gray-900 line-clamp-2 min-h-10">
+      <div className="px-2 sm:px-3 pt-2 sm:pt-3 pb-3 sm:pb-4 space-y-1 bg-white">
+        <h3 className="text-xs sm:text-sm font-medium text-gray-900 line-clamp-2 min-h-[2.5rem] sm:min-h-10">
           {productId ? (
             <Link href={productId} className="hover:underline">
               {title}
@@ -119,19 +119,19 @@ export default function ProductCard({
           <>
             {/* Metal type and weight info (retail) */}
             {metalType && weightInGrams && (
-              <div className="text-xs text-gray-500">
+              <div className="text-[10px] sm:text-xs text-gray-500">
                 {metalType} • {weightInGrams}g
               </div>
             )}
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
               <span className="font-semibold text-gray-900">{currentPrice}</span>
               {originalPrice && (
-                <span className="text-xs text-gray-500 line-through">
+                <span className="text-[10px] sm:text-xs text-gray-500 line-through">
                   {originalPrice}
                 </span>
               )}
               {discountLabel && (
-                <span className="text-xs font-semibold text-green-600">
+                <span className="text-[10px] sm:text-xs font-semibold text-green-600">
                   {discountLabel}
                 </span>
               )}

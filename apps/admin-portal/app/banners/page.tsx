@@ -24,7 +24,7 @@ export default function BannersPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  // Form state
+  // Form state..
   const [formData, setFormData] = useState({
     link: '',
     title: '',

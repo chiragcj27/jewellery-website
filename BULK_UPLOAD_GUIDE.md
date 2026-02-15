@@ -4,6 +4,13 @@
 
 The bulk upload feature allows administrators to upload multiple products at once using an Excel file. This is much faster than manually creating products one by one.
 
+### Description and Size/Length (new products)
+
+- **`description`** = Full product description (the main text customers read).
+- **`sizeLength`** = Size or length (e.g. chain length, ring size, bracelet length). Examples: `7 inches`, `18 cm`, `One size`.
+
+Use the **Download Excel Template** from the admin Bulk Upload page so your columns match the current format. For new products, put the product description in the **description** column and size/length in the **sizeLength** column.
+
 ## Features
 
 - **Template-based**: Download a pre-configured Excel template with example data
@@ -33,20 +40,20 @@ Fill in the Products sheet with your product data. Here's what each column means
 | Column | Type | Description | Example |
 |--------|------|-------------|---------|
 | `name` | Text | Product name | "Gold Diamond Ring" |
+| `sku` | Text | Unique SKU (used for product URL slug) | "RING-001" |
 | `category` | Text | Category name or slug (must exist) | "Rings" or "rings" |
 | `subcategory` | Text | Subcategory name or slug (must exist) | "Gold Rings" or "gold-rings" |
 
-**Note**: Either `price` OR (`weightInGrams` + `metalType` + `useDynamicPricing=true`) is required.
+**Note**: Each SKU must be unique within the same category/subcategory. Either `price` OR (`weightInGrams` + `metalType` + `useDynamicPricing=true`) is required.
 
 #### Optional Columns
 
 | Column | Type | Description | Example |
 |--------|------|-------------|---------|
-| `description` | Text | Detailed product description | "Beautiful handcrafted gold ring..." |
-| `shortDescription` | Text | Brief description | "24k gold ring with diamonds" |
+| `description` | Text | Product description | "Beautiful handcrafted gold ring..." |
+| `sizeLength` | Text | Size/Length (e.g. chain length, ring size) | "7 inches", "18 cm" |
 | `price` | Number | Fixed price (required if not using dynamic pricing) | 999.99 |
 | `compareAtPrice` | Number | Original price (for showing discounts) | 1499.99 |
-| `sku` | Text | Stock keeping unit | "RING-001" |
 | `stock` | Number | Available quantity | 10 |
 | `isActive` | Boolean | Product is visible on website | true / false / yes / no |
 | `isFeatured` | Boolean | Featured product | true / false / yes / no |
@@ -131,7 +138,7 @@ You can use either **Fixed Pricing** or **Weight-Based Dynamic Pricing**:
 - Set `useDynamicPricing` to `true`
 - Enter `weightInGrams` (e.g., 5.5)
 - Enter `metalType` (e.g., "22KT", "18KT")
-- Price will be calculated automatically: `(Gold Rate × Weight) + (Making Charges × Weight) + GST`
+- Price will be calculated automatically: Gold value + (Gold value × Making %) + GST. Gold value = Weight × (Rate per 10g ÷ 10)
 - Example: `weightInGrams=5.5, metalType=22KT, useDynamicPricing=true`
 
 **Important**: Make sure metal rates are configured in the admin portal before using dynamic pricing!

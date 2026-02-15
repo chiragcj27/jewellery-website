@@ -1,4 +1,4 @@
-'use client';
+  'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -19,6 +19,7 @@ interface BulkUploadResult {
   errorCount: number;
   errors: ValidationError[];
   createdProducts?: string[];
+  updatedProducts?: string[];
 }
 
 export default function BulkUploadPage() {
@@ -97,7 +98,7 @@ export default function BulkUploadPage() {
         {/* Important Things to Keep in Mind */}
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-6">
           <div className="flex">
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <svg className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
@@ -107,15 +108,16 @@ export default function BulkUploadPage() {
               <ul className="text-sm text-yellow-700 space-y-1 list-disc list-inside">
                 <li><strong>Test first:</strong> Upload 1-2 test products before bulk uploading hundreds</li>
                 <li><strong>Backup data:</strong> Keep a copy of your Excel file before uploading</li>
-                <li><strong>Spelling matters:</strong> Category and subcategory names must match exactly (NOT case-sensitive: "Rings" = "rings")</li>
+                <li><strong>Spelling matters:</strong> Category and subcategory names must match exactly (NOT case-sensitive: &quot;Rings&quot; = &quot;rings&quot;)</li>
                 <li><strong>Metal rates first:</strong> Configure metal rates in <Link href="/metal-rates" className="underline font-semibold">Metal Rates</Link> page before using dynamic pricing</li>
                 <li><strong>Choose one pricing:</strong> Use either price OR (weightInGrams + metalType + useDynamicPricing=true), not both</li>
                 <li><strong>Weight validation:</strong> Weight must be greater than 0 for dynamic pricing</li>
-                <li><strong>Metal type IS case-sensitive:</strong> Must match exactly (e.g., "22KT" not "22kt" or "22 KT")</li>
+                <li><strong>Metal type IS case-sensitive:</strong> Must match exactly (e.g., &quot;22KT&quot; not &quot;22kt&quot; or &quot;22 KT&quot;)</li>
                 <li><strong>Image formats:</strong> Only JPG, PNG, GIF, WEBP are supported</li>
                 <li><strong>File size:</strong> Keep Excel file under 10MB, ZIP under 50MB</li>
                 <li><strong>All-or-nothing:</strong> If validation fails on any row, NO products will be created</li>
-                <li><strong>Unique names:</strong> Product names should be unique within same category/subcategory</li>
+                <li><strong>SKU required:</strong> Each product needs a SKU (used for URL slug)</li>
+                <li><strong>Duplicate SKU:</strong> If SKU already exists in same category/subcategory, the product will be updated with new details</li>
                 <li><strong>Boolean values:</strong> Use true/false, yes/no, or 1/0 for isActive and isFeatured</li>
                 <li><strong>Decimal format:</strong> Use dot (.) for decimals, not comma (5.5 not 5,5)</li>
                 <li><strong>ZIP structure:</strong> If using ZIP, include Excel file and images in root (not in subfolders)</li>
@@ -142,7 +144,7 @@ export default function BulkUploadPage() {
               <div>
                 <p className="font-medium">Fill in your product data</p>
                 <p className="text-sm text-gray-600">
-                  Required fields: name, category, subcategory. Make sure category and subcategory names match exactly.
+                  Required fields: name, sku, category, subcategory. Each SKU must be unique within its category. Make sure category and subcategory names match exactly.
                 </p>
               </div>
             </div>
@@ -155,7 +157,7 @@ export default function BulkUploadPage() {
                 </p>
                 <p className="text-sm text-gray-600">
                   <strong>Option B - Dynamic Pricing:</strong> Set <span className="font-mono bg-gray-100 px-1">weightInGrams</span> (e.g., 5.5), 
-                  <span className="font-mono bg-gray-100 px-1 ml-1">metalType</span> (e.g., "22KT"), and 
+                  <span className="font-mono bg-gray-100 px-1 ml-1">metalType</span> (e.g., &quot;22KT&quot;), and 
                   <span className="font-mono bg-gray-100 px-1 ml-1">useDynamicPricing</span> to true. 
                   Optionally include <span className="font-mono bg-gray-100 px-1 ml-1">wastagePercentage</span> (e.g., 8) for wholesaler pricing. 
                   Price will be calculated automatically!
@@ -198,6 +200,7 @@ export default function BulkUploadPage() {
                 <p className="text-sm font-semibold text-blue-900 mb-1">Required Columns:</p>
                 <ul className="text-sm text-blue-800 space-y-1">
                   <li><span className="font-mono bg-white px-1">name</span> - Product name</li>
+                  <li><span className="font-mono bg-white px-1">sku</span> - Unique SKU (used for URL slug)</li>
                   <li><span className="font-mono bg-white px-1">category</span> - Category name or slug</li>
                   <li><span className="font-mono bg-white px-1">subcategory</span> - Subcategory name or slug</li>
                 </ul>
@@ -206,10 +209,10 @@ export default function BulkUploadPage() {
               <div>
                 <p className="text-sm font-semibold text-blue-900 mb-1">Pricing Options (choose one):</p>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li><span className="font-mono bg-white px-1">price</span> - Fixed price (required if not using dynamic pricing)</li>
+                  <li><span className="font-mono bg-white px-1">price</span> - Fixed price (required when not using dynamic pricing)</li>
                   <li><strong>OR</strong> for dynamic pricing:</li>
                   <li className="ml-4"><span className="font-mono bg-white px-1">weightInGrams</span> - Weight in grams (e.g., 5.5)</li>
-                  <li className="ml-4"><span className="font-mono bg-white px-1">metalType</span> - Metal type (e.g., "22KT", "18KT")</li>
+                  <li className="ml-4"><span className="font-mono bg-white px-1">metalType</span> - Metal type (e.g., &quot;22KT&quot;, &quot;18KT&quot;)</li>
                   <li className="ml-4"><span className="font-mono bg-white px-1">useDynamicPricing</span> - Set to true</li>
                   <li className="ml-4"><span className="font-mono bg-white px-1">wastagePercentage</span> - Optional wastage percentage (e.g., 8 = 8%)</li>
                 </ul>
@@ -218,10 +221,9 @@ export default function BulkUploadPage() {
               <div>
                 <p className="text-sm font-semibold text-blue-900 mb-1">Optional Columns:</p>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li><span className="font-mono bg-white px-1">description</span> - Detailed description</li>
-                  <li><span className="font-mono bg-white px-1">shortDescription</span> - Brief description</li>
+                  <li><span className="font-mono bg-white px-1">description</span> - Product description</li>
+                  <li><span className="font-mono bg-white px-1">sizeLength</span> - Size/Length (e.g. 7 inches, 18 cm)</li>
                   <li><span className="font-mono bg-white px-1">compareAtPrice</span> - Original price for discounts</li>
-                  <li><span className="font-mono bg-white px-1">sku</span> - Stock keeping unit</li>
                   <li><span className="font-mono bg-white px-1">stock</span> - Stock quantity (default: 0)</li>
                   <li><span className="font-mono bg-white px-1">wastagePercentage</span> - Wastage percentage for wholesaler pricing (e.g., 8 = 8%)</li>
                   <li><span className="font-mono bg-white px-1">isActive</span> - true/false (default: true)</li>
@@ -253,13 +255,14 @@ export default function BulkUploadPage() {
           <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
             <h3 className="font-medium text-red-900 mb-2">❌ Common Mistakes to Avoid:</h3>
             <ul className="text-sm text-red-800 space-y-1">
-              <li>• <strong>Typo in category/subcategory:</strong> "Rigns" instead of "Rings" (spelling must match, but case doesn't matter)</li>
-              <li>• <strong>Metal type case mismatch:</strong> "22kt" or "22 KT" instead of "22KT" (metal type IS case-sensitive!)</li>
+              <li>• <strong>Missing or duplicate SKU:</strong> Every product needs a unique SKU within its category</li>
+              <li>• <strong>Typo in category/subcategory:</strong> &quot;Rigns&quot; instead of &quot;Rings&quot; (spelling must match, but case doesn&apos;t matter)</li>
+              <li>• <strong>Metal type case mismatch:</strong> &quot;22kt&quot; or &quot;22 KT&quot; instead of &quot;22KT&quot; (metal type IS case-sensitive!)</li>
               <li>• <strong>Missing price:</strong> Forgot to set price when useDynamicPricing is false</li>
               <li>• <strong>Both pricing types:</strong> Setting both price AND dynamic pricing fields</li>
               <li>• <strong>Weight is zero:</strong> Setting weightInGrams to 0 for dynamic pricing</li>
-              <li>• <strong>Category mismatch:</strong> Subcategory doesn't belong to the specified category</li>
-              <li>• <strong>Metal rate not configured:</strong> Using metalType that doesn't exist in Metal Rates</li>
+              <li>• <strong>Category mismatch:</strong> Subcategory doesn&apos;t belong to the specified category</li>
+              <li>• <strong>Metal rate not configured:</strong> Using metalType that doesn&apos;t exist in Metal Rates</li>
               <li>• <strong>Wrong decimal separator:</strong> Using comma (5,5) instead of dot (5.5)</li>
               <li>• <strong>Images in subfolder:</strong> ZIP file has images in /images/ folder instead of root</li>
             </ul>
@@ -323,20 +326,49 @@ export default function BulkUploadPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
               <div className="bg-gray-50 p-4 rounded-md">
                 <p className="text-sm text-gray-600">Total Rows</p>
                 <p className="text-2xl font-bold text-gray-900">{result.totalRows}</p>
               </div>
               <div className="bg-green-50 p-4 rounded-md">
-                <p className="text-sm text-green-600">Successful</p>
-                <p className="text-2xl font-bold text-green-700">{result.successCount}</p>
+                <p className="text-sm text-green-600">Created</p>
+                <p className="text-2xl font-bold text-green-700">{result.createdProducts?.length ?? 0}</p>
+              </div>
+              <div className="bg-blue-50 p-4 rounded-md">
+                <p className="text-sm text-blue-600">Updated</p>
+                <p className="text-2xl font-bold text-blue-700">{result.updatedProducts?.length ?? 0}</p>
               </div>
               <div className="bg-red-50 p-4 rounded-md">
                 <p className="text-sm text-red-600">Errors</p>
                 <p className="text-2xl font-bold text-red-700">{result.errorCount}</p>
               </div>
             </div>
+
+            {result.success && (result.createdProducts?.length ?? 0) + (result.updatedProducts?.length ?? 0) > 0 && (
+              <div className="mb-6 space-y-4">
+                {result.createdProducts && result.createdProducts.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Created products ({result.createdProducts.length})
+                    </h3>
+                    <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md font-mono break-all">
+                      {result.createdProducts.join(', ')}
+                    </div>
+                  </div>
+                )}
+                {result.updatedProducts && result.updatedProducts.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Updated products ({result.updatedProducts.length})
+                    </h3>
+                    <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md font-mono break-all">
+                      {result.updatedProducts.join(', ')}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {result.errors.length > 0 && (
               <div>

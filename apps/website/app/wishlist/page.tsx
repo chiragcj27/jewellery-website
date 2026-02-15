@@ -124,7 +124,7 @@ export default function WishlistPage() {
             >
               {/* Image container */}
               <Link
-                href={item.slug ? `/product/${item.slug}` : "/product"}
+                href={item.slug ? `/product/${encodeURIComponent(item.slug)}` : "/"}
                 className="block relative aspect-4/5 bg-[#f8f5ef] overflow-hidden"
               >
                 <Image
@@ -141,7 +141,7 @@ export default function WishlistPage() {
               {/* Details */}
               <div className="p-5 flex flex-col">
                 <Link
-                  href={item.slug ? `/product/${item.slug}` : "/product"}
+                  href={item.slug ? `/product/${encodeURIComponent(item.slug)}` : "/"}
                   className="mb-2"
                 >
                   <h3 className="text-lg font-semibold text-black group-hover:text-gray-700 transition-colors line-clamp-2">

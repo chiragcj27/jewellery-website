@@ -115,6 +115,7 @@ export const api = {
       return fetch(url).then(res => res.json());
     },
     getById: (id: string) => fetch(`${API_BASE_URL}/api/products/${id}`).then(res => res.json()),
+    getBySku: (sku: string) => fetch(`${API_BASE_URL}/api/products/sku/${encodeURIComponent(sku)}`).then(res => res.json()),
   },
   metalRates: {
     getAll: (active?: boolean) => {
@@ -128,6 +129,7 @@ export const api = {
   categories: {
     getAll: () => fetch(`${API_BASE_URL}/api/categories`).then(res => res.json()),
     getById: (id: string) => fetch(`${API_BASE_URL}/api/categories/${id}`).then(res => res.json()),
+    getBySlug: (slug: string) => fetch(`${API_BASE_URL}/api/categories/slug/${slug}`).then(res => res.json()),
   },
   subcategories: {
     getAll: (categoryId?: string) => {
@@ -137,6 +139,7 @@ export const api = {
       return fetch(url).then(res => res.json());
     },
     getById: (id: string) => fetch(`${API_BASE_URL}/api/subcategories/${id}`).then(res => res.json()),
+    getBySlug: (slug: string) => fetch(`${API_BASE_URL}/api/subcategories/slug/${slug}`).then(res => res.json()),
   },
   banners: {
     getAll: (active?: boolean) => {

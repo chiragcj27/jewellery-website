@@ -30,6 +30,21 @@ export async function getById(req: Request, res: Response): Promise<void> {
   }
 }
 
+export async function getBySlug(req: Request, res: Response): Promise<void> {
+  try {
+    await connectToDatabase();
+    const category = await Category.findOne({ slug: req.params.slug });
+    if (!category) {
+      res.status(404).json({ success: false, error: 'Category not found' });
+      return;
+    }
+    res.json({ success: true, data: category });
+  } catch (error: unknown) {
+    console.error('Error fetching category by slug:', error);
+    res.status(500).json({ success: false, error: getErrorMessage(error) });
+  }
+}
+
 export async function create(req: Request, res: Response): Promise<void> {
   const imageAssetId = req.body.imageAssetId as string | undefined;
   let imageUrl: string | undefined = req.body.image;

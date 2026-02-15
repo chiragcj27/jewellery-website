@@ -1,13 +1,17 @@
 /**
  * Price calculation utility for jewellery products - Frontend version
- * 
- * Formula: (goldRate * weight) + (makingChargePerGram * weight) + GST
+ *
+ * Formula:
+ * - Gold value = Weight × (Rate per 10g ÷ 10)
+ * - Making charges = Gold value × Making charges %
+ * - Subtotal = Gold value + Making charges
+ * - Total = Subtotal + GST%
  */
 
 export interface MetalRateData {
   metalType: string;
   ratePerTenGrams: number;
-  makingChargePerGram: number;
+  makingChargesPercentage: number;
   gstPercentage: number;
 }
 
@@ -44,13 +48,13 @@ export function calculatePrice(
   weightInGrams: number,
   metalRate: MetalRateData
 ): PriceBreakdown {
-  // Calculate gold cost (rate is per 10 grams)
+  // Gold value = weight × (rate per 10g ÷ 10)
   const goldCost = (metalRate.ratePerTenGrams / 10) * weightInGrams;
 
-  // Calculate making charges
-  const makingCharges = metalRate.makingChargePerGram * weightInGrams;
+  // Making charges = gold value × making charges %
+  const makingCharges = goldCost * (metalRate.makingChargesPercentage / 100);
 
-  // Calculate subtotal
+  // Subtotal = gold value + making charges
   const subtotal = goldCost + makingCharges;
 
   // Calculate GST

@@ -517,14 +517,14 @@ async function run() {
       (d.description ?? d.product_description ?? '')?.trim() ||
       d.product_name ||
       undefined;
-    const shortDescVal =
-      (d.short_description ?? '')?.trim() || d.product_name || undefined;
+    const sizeLengthVal =
+      (d.short_description ?? d.size ?? '')?.trim() || undefined;
 
     const productData = {
       name: d.product_name,
       slug,
       description: descriptionVal || undefined,
-      shortDescription: shortDescVal || undefined,
+      sizeLength: sizeLengthVal || undefined,
       images: getImages(item),
       category: categoryOurId,
       subcategory: subcategoryOurId,
@@ -572,7 +572,7 @@ async function run() {
       await MetalRate.create({
         metalType: purity,
         ratePerTenGrams: 0,
-        makingChargePerGram: 0,
+        makingChargesPercentage: 15,
         gstPercentage: 3,
         isActive: true,
       });

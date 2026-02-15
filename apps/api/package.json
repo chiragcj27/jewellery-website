@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "check-types": "tsc --noEmit",
     "migrate:products": "tsx scripts/migrate-from-json.ts",
-    "migrate:api": "tsx scripts/migrate-from-api.ts"
+    "migrate:api": "tsx scripts/migrate-from-api.ts",
+    "migrate:metal-rates": "tsx scripts/migrate-metal-rates-making-charges.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.700.0",

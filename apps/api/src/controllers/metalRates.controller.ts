@@ -78,12 +78,12 @@ export const getMetalRateByType = async (req: Request, res: Response): Promise<v
 export const createMetalRate = async (req: Request, res: Response): Promise<void> => {
   try {
     await connectToDatabase();
-    const { metalType, ratePerTenGrams, makingChargePerGram, gstPercentage, isActive } = req.body;
+    const { metalType, purityPercentage, ratePerTenGrams, makingChargesPercentage, gstPercentage, isActive } = req.body;
 
-    if (!metalType || ratePerTenGrams === undefined || makingChargePerGram === undefined) {
+    if (!metalType || ratePerTenGrams === undefined || makingChargesPercentage === undefined) {
       res.status(400).json({
         success: false,
-        error: 'Metal type, rate per 10 grams, and making charge per gram are required',
+        error: 'Metal type, rate per 10 grams, and making charges percentage are required',
       });
       return;
     }
@@ -100,8 +100,9 @@ export const createMetalRate = async (req: Request, res: Response): Promise<void
 
     const metalRate = new MetalRate({
       metalType,
+      ...(purityPercentage !== undefined && { purityPercentage }),
       ratePerTenGrams,
-      makingChargePerGram,
+      makingChargesPercentage,
       gstPercentage: gstPercentage !== undefined ? gstPercentage : 3,
       isActive: isActive !== undefined ? isActive : true,
     });
@@ -120,19 +121,35 @@ export const createMetalRate = async (req: Request, res: Response): Promise<void
 export const updateMetalRate = async (req: Request, res: Response): Promise<void> => {
   try {
     await connectToDatabase();
-    const { metalType, ratePerTenGrams, makingChargePerGram, gstPercentage, isActive } = req.body;
+    const { metalType, purityPercentage, ratePerTenGrams, makingChargesPercentage, gstPercentage, isActive } = req.body;
 
-    const updateData: Partial<Omit<IMetalRate, keyof Document>> = {};
+    const updateData: Record<string, unknown> = {};
 
     if (metalType !== undefined) updateData.metalType = metalType;
+    if ('purityPercentage' in req.body) updateData.purityPercentage = purityPercentage ?? null;
     if (ratePerTenGrams !== undefined) updateData.ratePerTenGrams = ratePerTenGrams;
-    if (makingChargePerGram !== undefined) updateData.makingChargePerGram = makingChargePerGram;
+    if (makingChargesPercentage !== undefined) updateData.makingChargesPercentage = makingChargesPercentage;
     if (gstPercentage !== undefined) updateData.gstPercentage = gstPercentage;
     if (isActive !== undefined) updateData.isActive = isActive;
 
+    // Ensure makingChargesPercentage is always set when updating (required for schema)
+    if (makingChargesPercentage === undefined) {
+      res.status(400).json({
+        success: false,
+        error: 'Making charges percentage is required',
+      });
+      return;
+    }
+
+    // Remove legacy field when updating so document conforms to new schema
+    const update: Record<string, unknown> = {
+      $set: updateData,
+      $unset: { makingChargePerGram: '' },
+    };
+
     const metalRate = await MetalRate.findByIdAndUpdate(
       req.params.id,
-      updateData,
+      update,
       { new: true, runValidators: true }
     );
 

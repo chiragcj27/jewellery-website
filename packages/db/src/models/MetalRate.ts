@@ -2,8 +2,9 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IMetalRate extends Document {
   metalType: string; // e.g., "22KT", "18KT", "20KT", "24KT", "Silver", "Platinum"
+  purityPercentage?: number; // e.g., 92 for 22KT (92% pure gold)
   ratePerTenGrams: number; // Gold rate per 10 grams
-  makingChargePerGram: number; // Making charges per gram
+  makingChargesPercentage: number; // Making charges as % of gold value
   gstPercentage: number; // GST percentage (e.g., 3 for 3%)
   isActive: boolean;
   createdAt: Date;
@@ -18,15 +19,21 @@ const MetalRateSchema: Schema = new Schema(
       trim: true,
       unique: true,
     },
+    purityPercentage: {
+      type: Number,
+      min: 0,
+      max: 100,
+    },
     ratePerTenGrams: {
       type: Number,
       required: true,
       min: 0,
     },
-    makingChargePerGram: {
+    makingChargesPercentage: {
       type: Number,
       required: true,
       min: 0,
+      max: 100,
     },
     gstPercentage: {
       type: Number,

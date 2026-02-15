@@ -25,6 +25,9 @@ export default function AssetsPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   useEffect(() => {
     fetchAssets();
@@ -33,7 +36,7 @@ export default function AssetsPage() {
   const fetchAssets = async () => {
     setLoading(true);
     try {
-      const result = await api.assets.getAll(100, 0);
+      const result = await api.assets.getAll(10000, 0);
       if (result.success && result.data) {
         setAssets(result.data);
       }
@@ -135,6 +138,29 @@ export default function AssetsPage() {
     return asset.fileName || asset.originalFilename || 'Unknown';
   };
 
+  // Filter assets based on search query
+  const filteredAssets = assets.filter((asset) => {
+    const fileName = getFileName(asset).toLowerCase();
+    const query = searchQuery.toLowerCase();
+    return fileName.includes(query) || asset.url.toLowerCase().includes(query);
+  });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredAssets.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedAssets = filteredAssets.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -197,9 +223,10 @@ export default function AssetsPage() {
           <h3 className="font-medium text-blue-900 mb-2">Using Images in Bulk Upload</h3>
           <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
             <li>Upload your images here</li>
-            <li>Click the "Copy URL" button for each image</li>
-            <li>Paste the URLs in your Excel file's "images" column</li>
-            <li>Separate multiple URLs with commas</li>
+            <li>Use the search bar below to find specific images by filename</li>
+            <li>Click the &quot;Copy URL&quot; button for each image you want to use</li>
+            <li>Paste the URLs in your Excel file&apos;s &quot;images&quot; column</li>
+            <li>Separate multiple URLs with commas (no spaces)</li>
           </ol>
         </div>
 
@@ -210,10 +237,51 @@ export default function AssetsPage() {
           </div>
         ) : assets.length > 0 ? (
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4">All Images ({assets.length})</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {assets.map((asset) => (
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">
+                  All Images ({filteredAssets.length}{filteredAssets.length !== assets.length ? ` of ${assets.length}` : ''})
+                </h2>
+              </div>
+              
+              {/* Search Bar */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search by filename or URL..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <svg
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {filteredAssets.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No images match your search.</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {paginatedAssets.map((asset) => (
                 <div key={asset._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="aspect-square bg-gray-100 rounded-md mb-3 overflow-hidden relative group">
                     <img
@@ -284,6 +352,63 @@ export default function AssetsPage() {
                 </div>
               ))}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex items-center justify-center gap-2">
+                <button
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                
+                <div className="flex gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    // Show first page, last page, current page, and pages around current
+                    const showPage = 
+                      page === 1 || 
+                      page === totalPages || 
+                      (page >= currentPage - 1 && page <= currentPage + 1);
+                    
+                    const showEllipsis = 
+                      (page === currentPage - 2 && currentPage > 3) ||
+                      (page === currentPage + 2 && currentPage < totalPages - 2);
+                    
+                    if (showEllipsis) {
+                      return <span key={page} className="px-3 py-2">...</span>;
+                    }
+                    
+                    if (!showPage) return null;
+                    
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => goToPage(page)}
+                        className={`px-3 py-2 rounded-lg ${
+                          currentPage === page
+                            ? 'bg-blue-600 text-white'
+                            : 'border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+              </>
+            )}
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
@@ -294,7 +419,7 @@ export default function AssetsPage() {
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No images uploaded yet</h3>
             <p className="text-gray-600">
-              Upload some images to get started. They'll appear here and you can copy their URLs.
+              Upload some images to get started. They&apos;ll appear here and you can copy their URLs.
             </p>
           </div>
         )}

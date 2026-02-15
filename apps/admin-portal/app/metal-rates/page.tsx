@@ -7,8 +7,9 @@ import { api } from '@/lib/api';
 interface MetalRate {
   _id: string;
   metalType: string;
+  purityPercentage?: number;
   ratePerTenGrams: number;
-  makingChargePerGram: number;
+  makingChargesPercentage?: number; // optional for legacy records with makingChargePerGram
   gstPercentage: number;
   isActive: boolean;
   createdAt: string;
@@ -22,8 +23,9 @@ export default function MetalRatesPage() {
   const [editingRate, setEditingRate] = useState<MetalRate | null>(null);
   const [formData, setFormData] = useState({
     metalType: '',
+    purityPercentage: '',
     ratePerTenGrams: '',
-    makingChargePerGram: '',
+    makingChargesPercentage: '',
     gstPercentage: '3',
     isActive: true,
   });
@@ -47,7 +49,7 @@ export default function MetalRatesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.metalType || !formData.ratePerTenGrams || !formData.makingChargePerGram) {
+    if (!formData.metalType || !formData.ratePerTenGrams || !formData.makingChargesPercentage) {
       alert('Please fill in all required fields');
       return;
     }
@@ -55,8 +57,9 @@ export default function MetalRatesPage() {
     try {
       const rateData = {
         metalType: formData.metalType.trim(),
+        purityPercentage: formData.purityPercentage === '' ? null : parseFloat(formData.purityPercentage),
         ratePerTenGrams: parseFloat(formData.ratePerTenGrams),
-        makingChargePerGram: parseFloat(formData.makingChargePerGram),
+        makingChargesPercentage: parseFloat(formData.makingChargesPercentage),
         gstPercentage: parseFloat(formData.gstPercentage),
         isActive: formData.isActive,
       };
@@ -73,7 +76,8 @@ export default function MetalRatesPage() {
       }
     } catch (error) {
       console.error('Error saving metal rate:', error);
-      alert('Failed to save metal rate');
+      const msg = error instanceof Error ? error.message : 'Failed to save metal rate';
+      alert(msg);
     }
   };
 
@@ -81,8 +85,9 @@ export default function MetalRatesPage() {
     setEditingRate(rate);
     setFormData({
       metalType: rate.metalType,
+      purityPercentage: rate.purityPercentage != null ? rate.purityPercentage.toString() : '',
       ratePerTenGrams: rate.ratePerTenGrams.toString(),
-      makingChargePerGram: rate.makingChargePerGram.toString(),
+      makingChargesPercentage: (rate.makingChargesPercentage ?? 15).toString(),
       gstPercentage: rate.gstPercentage.toString(),
       isActive: rate.isActive,
     });
@@ -108,8 +113,9 @@ export default function MetalRatesPage() {
   const resetForm = () => {
     setFormData({
       metalType: '',
+      purityPercentage: '',
       ratePerTenGrams: '',
-      makingChargePerGram: '',
+      makingChargesPercentage: '',
       gstPercentage: '3',
       isActive: true,
     });
@@ -170,6 +176,23 @@ export default function MetalRatesPage() {
                 )}
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Purity % (optional, e.g. 92 for 22KT)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={formData.purityPercentage}
+                  onChange={(e) => setFormData({ ...formData, purityPercentage: e.target.value })}
+                  placeholder="92"
+                  className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">Gold purity as percentage (22KT ≈ 91.6%, 18KT ≈ 75%)</p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -189,18 +212,18 @@ export default function MetalRatesPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Making Charge per Gram * (₹)
+                    Making Charges * (% of gold value)
                   </label>
                   <input
                     type="number"
                     step="0.01"
                     required
-                    value={formData.makingChargePerGram}
-                    onChange={(e) => setFormData({ ...formData, makingChargePerGram: e.target.value })}
-                    placeholder="500"
+                    value={formData.makingChargesPercentage}
+                    onChange={(e) => setFormData({ ...formData, makingChargesPercentage: e.target.value })}
+                    placeholder="15"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Making charges per gram</p>
+                  <p className="text-xs text-gray-500 mt-1">Percentage of gold value</p>
                 </div>
 
                 <div>
@@ -223,20 +246,29 @@ export default function MetalRatesPage() {
               <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
                 <h3 className="font-medium text-blue-900 mb-2">Price Calculation Formula:</h3>
                 <p className="text-sm text-blue-800">
-                  Final Price = (Rate per 10g ÷ 10 × Weight) + (Making Charge per gram × Weight) + GST
+                  Gold value = Weight × (Rate per 10g ÷ 10)
+                </p>
+                <p className="text-sm text-blue-800">
+                  Making charges = Gold value × Making charges %
+                </p>
+                <p className="text-sm text-blue-800">
+                  Subtotal = Gold value + Making charges
+                </p>
+                <p className="text-sm text-blue-800">
+                  Total = Subtotal + GST%
                 </p>
                 <p className="text-xs text-blue-700 mt-2">
-                  Example: For a 5g product with 22KT at ₹75,000/10g, ₹500/g making, 3% GST:
+                  Example: 5g product, 22KT at ₹75,000/10g, 15% making charges, 3% GST:
                   <br />
-                  Gold Cost = (75000 ÷ 10) × 5 = ₹37,500
+                  Gold value = (75000 ÷ 10) × 5 = ₹37,500
                   <br />
-                  Making = 500 × 5 = ₹2,500
+                  Making charges = 37500 × 15% = ₹5,625
                   <br />
-                  Subtotal = ₹40,000
+                  Subtotal = ₹43,125
                   <br />
-                  GST = 40000 × 0.03 = ₹1,200
+                  GST = 43125 × 3% = ₹1,293.75
                   <br />
-                  <strong>Final Price = ₹41,200</strong>
+                  <strong>Final Price = ₹44,418.75</strong>
                 </p>
               </div>
 
@@ -279,10 +311,13 @@ export default function MetalRatesPage() {
                   Metal Type
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Purity %
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Rate per 10g
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Making Charge/g
+                  Making %
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   GST %
@@ -298,7 +333,7 @@ export default function MetalRatesPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {metalRates.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
                     No metal rates found. Create your first metal rate!
                   </td>
                 </tr>
@@ -309,10 +344,15 @@ export default function MetalRatesPage() {
                       <div className="text-sm font-medium text-gray-900">{rate.metalType}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {rate.purityPercentage != null ? `${rate.purityPercentage}%` : '—'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">₹{rate.ratePerTenGrams.toFixed(2)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">₹{rate.makingChargePerGram.toFixed(2)}</div>
+                      <div className="text-sm text-gray-900">{rate.makingChargesPercentage != null ? `${rate.makingChargesPercentage}%` : '—'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{rate.gstPercentage}%</div>

@@ -96,10 +96,10 @@ export default function Navbar() {
               )}
             </svg>
           </button>
-
+              
           {/* Brand Logo */}
           <Link href="/" className="shrink-0">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-black belleza-regular">ZIVARA</h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-black belleza-regular">The Swarnorra</h1>
           </Link>
 
           {/* Search Bar - Hidden on mobile, shown on tablet+ */}

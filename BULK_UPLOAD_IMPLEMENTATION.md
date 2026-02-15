@@ -151,7 +151,7 @@ images column: https://example.com/img1.jpg,local-image.jpg
 | subcategory | Text | Yes | "Gold Rings" |
 | price | Number | Yes | 999.99 |
 | description | Text | No | "Beautiful handcrafted..." |
-| shortDescription | Text | No | "24k gold ring" |
+| sizeLength | Text | No | "7 inches", "18 cm" |
 | compareAtPrice | Number | No | 1499.99 |
 | sku | Text | No | "RING-001" |
 | stock | Number | No | 10 |

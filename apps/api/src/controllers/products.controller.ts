@@ -56,6 +56,31 @@ export async function getById(req: Request, res: Response): Promise<void> {
   }
 }
 
+export async function getBySku(req: Request, res: Response): Promise<void> {
+  try {
+    await connectToDatabase();
+    const sku = (req.params.sku ?? '').trim();
+    if (!sku) {
+      res.status(400).json({ success: false, error: 'SKU is required' });
+      return;
+    }
+    const product = await Product.findOne({ sku })
+      .populate('category', 'name slug')
+      .populate('subcategory', 'name slug')
+      .lean();
+
+    if (!product) {
+      res.status(404).json({ success: false, error: 'Product not found' });
+      return;
+    }
+
+    res.json({ success: true, data: product });
+  } catch (error: unknown) {
+    console.error('Error fetching product by SKU:', error);
+    res.status(500).json({ success: false, error: getErrorMessage(error) });
+  }
+}
+
 export async function create(req: Request, res: Response): Promise<void> {
   const imageAssetIds = (req.body.imageAssetIds as string[] | undefined) || [];
   const bodyImages = Array.isArray(req.body.images) ? req.body.images : [];
@@ -78,7 +103,7 @@ export async function create(req: Request, res: Response): Promise<void> {
       category,
       subcategory,
       description,
-      shortDescription,
+      sizeLength,
       price,
       compareAtPrice,
       sku,
@@ -98,6 +123,14 @@ export async function create(req: Request, res: Response): Promise<void> {
       res.status(400).json({
         success: false,
         error: 'Name, category, and subcategory are required',
+      });
+      return;
+    }
+
+    if (!sku || String(sku).trim() === '') {
+      res.status(400).json({
+        success: false,
+        error: 'SKU is required (used for product URL slug)',
       });
       return;
     }
@@ -139,17 +172,18 @@ export async function create(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    const skuTrimmed = String(sku).trim();
     const product = new Product({
       name,
-      slug: slugify(name),
+      slug: slugify(skuTrimmed),
       category,
       subcategory,
       description,
-      shortDescription,
+      sizeLength,
       images: imageUrls,
       price,
       compareAtPrice,
-      sku,
+      sku: skuTrimmed,
       stock: stock !== undefined ? stock : 0,
       isActive: isActive !== undefined ? isActive : true,
       isFeatured: isFeatured !== undefined ? isFeatured : false,
@@ -217,7 +251,7 @@ export async function update(req: Request, res: Response): Promise<void> {
       category,
       subcategory,
       description,
-      shortDescription,
+      sizeLength,
       price,
       compareAtPrice,
       sku,
@@ -235,9 +269,19 @@ export async function update(req: Request, res: Response): Promise<void> {
 
     const updateData: Record<string, unknown> = {};
 
-    if (name !== undefined) {
-      updateData.name = name;
-      updateData.slug = slugify(name);
+    if (name !== undefined) updateData.name = name;
+
+    if (sku !== undefined) {
+      const skuTrimmed = String(sku).trim();
+      if (skuTrimmed === '') {
+        res.status(400).json({
+          success: false,
+          error: 'SKU cannot be empty (used for product URL slug)',
+        });
+        return;
+      }
+      updateData.sku = skuTrimmed;
+      updateData.slug = slugify(skuTrimmed);
     }
 
     if (category !== undefined) {
@@ -267,11 +311,10 @@ export async function update(req: Request, res: Response): Promise<void> {
     }
 
     if (description !== undefined) updateData.description = description;
-    if (shortDescription !== undefined) updateData.shortDescription = shortDescription;
+    if (sizeLength !== undefined) updateData.sizeLength = sizeLength;
     if (imageUrls !== undefined) updateData.images = imageUrls;
     if (price !== undefined) updateData.price = price;
     if (compareAtPrice !== undefined) updateData.compareAtPrice = compareAtPrice;
-    if (sku !== undefined) updateData.sku = sku;
     if (stock !== undefined) updateData.stock = stock;
     if (isActive !== undefined) updateData.isActive = isActive;
     if (isFeatured !== undefined) updateData.isFeatured = isFeatured;

@@ -13,7 +13,7 @@ function calculateLinePrice(
   wastageIncluded: boolean,
   price: number,
   quantity: number,
-  metalRates: { metalType: string; ratePerTenGrams: number; makingChargePerGram: number; gstPercentage: number }[]
+  metalRates: { metalType: string; ratePerTenGrams: number; makingChargesPercentage: number; gstPercentage: number }[]
 ): number {
   if (weightInGrams == null || !metalType) {
     return price * quantity;
@@ -23,7 +23,7 @@ function calculateLinePrice(
   const wastage = wastageIncluded ? wastagePercentage : 0;
   const effectiveWeight = getEffectiveWeight(weightInGrams, wastage);
   const goldCost = (rate.ratePerTenGrams / 10) * effectiveWeight;
-  const makingCharges = rate.makingChargePerGram * effectiveWeight;
+  const makingCharges = goldCost * (rate.makingChargesPercentage / 100);
   const subtotal = goldCost + makingCharges;
   const gstAmount = (subtotal * rate.gstPercentage) / 100;
   const finalPrice = Math.round((subtotal + gstAmount) * 100) / 100;
@@ -81,11 +81,11 @@ export async function createOrder(req: Request, res: Response): Promise<void> {
     }
 
     const metalRatesRaw = await MetalRate.find({ isActive: true }).lean();
-    const metalRates: Array<{ metalType: string; ratePerTenGrams: number; makingChargePerGram: number; gstPercentage: number }> =
+    const metalRates: Array<{ metalType: string; ratePerTenGrams: number; makingChargesPercentage: number; gstPercentage: number }> =
       metalRatesRaw.map((r) => ({
         metalType: (r as Record<string, unknown>).metalType as string,
         ratePerTenGrams: (r as Record<string, unknown>).ratePerTenGrams as number,
-        makingChargePerGram: (r as Record<string, unknown>).makingChargePerGram as number,
+        makingChargesPercentage: (r as Record<string, unknown>).makingChargesPercentage as number,
         gstPercentage: (r as Record<string, unknown>).gstPercentage as number,
       }));
     const orderItems: IOrderItem[] = items.map((item) => {

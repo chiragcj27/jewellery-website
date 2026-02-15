@@ -4,6 +4,7 @@ import * as subcategoriesController from '../controllers/subcategories.controlle
 const router = Router();
 
 router.get('/', subcategoriesController.getAll);
+router.get('/slug/:slug', subcategoriesController.getBySlug);
 router.get('/:id', subcategoriesController.getById);
 router.post('/', subcategoriesController.create);
 router.put('/:id', subcategoriesController.update);

@@ -30,7 +30,7 @@ interface Product {
   name: string;
   slug: string;
   description?: string;
-  shortDescription?: string;
+  sizeLength?: string;
   images: string[];
   category: Category | string;
   subcategory: Subcategory | string;
@@ -44,13 +44,14 @@ interface Product {
   weightInGrams?: number;
   metalType?: string;
   useDynamicPricing: boolean;
+  filterValues: Record<string, string | string[]>;
 }
 
 interface MetalRate {
   _id: string;
   metalType: string;
   ratePerTenGrams: number;
-  makingChargePerGram: number;
+  makingChargesPercentage: number;
   gstPercentage: number;
   isActive: boolean;
 }
@@ -68,7 +69,7 @@ export default function ProductsPage() {
     category: '',
     subcategory: '',
     description: '',
-    shortDescription: '',
+    sizeLength: '',
     images: [] as string[],
     imageAssetIds: [] as string[],
     price: '',
@@ -157,8 +158,16 @@ export default function ProductsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.name?.trim()) {
+      alert('Product name is required');
+      return;
+    }
+    if (!formData.sku?.trim()) {
+      alert('SKU is required (used for product URL)');
+      return;
+    }
     if (!formData.category || !formData.subcategory) {
-      alert('Please fill in all required fields');
+      alert('Please select category and subcategory');
       return;
     }
 
@@ -179,12 +188,12 @@ export default function ProductsPage() {
         category: formData.category,
         subcategory: formData.subcategory,
         description: formData.description || undefined,
-        shortDescription: formData.shortDescription || undefined,
+        sizeLength: formData.sizeLength || undefined,
         images: formData.images,
         imageAssetIds: formData.imageAssetIds.length ? formData.imageAssetIds : undefined,
         price: formData.price ? parseFloat(formData.price) : undefined,
         compareAtPrice: formData.compareAtPrice ? parseFloat(formData.compareAtPrice) : undefined,
-        sku: formData.sku || undefined,
+        sku: formData.sku.trim(),
         stock: formData.stock ? parseInt(formData.stock, 10) : 0,
         isActive: formData.isActive,
         isFeatured: formData.isFeatured,
@@ -225,7 +234,7 @@ export default function ProductsPage() {
       category: categoryId,
       subcategory: subcategoryId,
       description: product.description || '',
-      shortDescription: product.shortDescription || '',
+      sizeLength: product.sizeLength || '',
       images: product.images || [],
       imageAssetIds: [],
       price: product.price?.toString() || '',
@@ -235,7 +244,7 @@ export default function ProductsPage() {
       isActive: product.isActive,
       isFeatured: product.isFeatured,
       displayOrder: product.displayOrder,
-      filterValues: (product as any).filterValues || {},
+      filterValues: (product as Product).filterValues || {},
       weightInGrams: product.weightInGrams?.toString() || '',
       metalType: product.metalType || '',
       useDynamicPricing: product.useDynamicPricing || false,
@@ -269,7 +278,7 @@ export default function ProductsPage() {
       category: '',
       subcategory: '',
       description: '',
-      shortDescription: '',
+      sizeLength: '',
       images: [],
       imageAssetIds: [],
       price: '',
@@ -487,12 +496,13 @@ export default function ProductsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Short Description
+                  Size / Length
                 </label>
                 <input
                   type="text"
-                  value={formData.shortDescription}
-                  onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                  value={formData.sizeLength}
+                  onChange={(e) => setFormData({ ...formData, sizeLength: e.target.value })}
+                  placeholder="e.g. 7 inches, 18 cm"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -565,7 +575,7 @@ export default function ProductsPage() {
                       </div>
                       <div className="md:col-span-2">
                         <p className="text-xs text-blue-700">
-                          Price will be calculated automatically: (Gold Rate × Weight) + (Making Charges × Weight) + GST
+                          Price: Gold value + (Gold value × Making %) + GST. Gold value = Weight × (Rate per 10g ÷ 10)
                         </p>
                         {!metalRates.length && (
                           <p className="text-xs text-red-600 mt-1">
@@ -620,12 +630,13 @@ export default function ProductsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    SKU
+                    SKU <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.sku}
                     onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                    placeholder="Unique product identifier (used for URL)"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -660,24 +671,28 @@ export default function ProductsPage() {
                   <p className="mt-1 text-sm text-red-600">{imagesError}</p>
                 )}
                 {formData.images.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {formData.images.map((url, i) => (
-                      <div key={i} className="relative group">
-                        <img
-                          src={url}
-                          alt=""
-                          className="h-16 w-16 object-cover rounded border"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeProductImage(i)}
-                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs leading-none opacity-0 group-hover:opacity-100 focus:opacity-100"
-                          aria-label="Remove"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
+                  <div className="mt-3 space-y-4">
+                    <div className="flex flex-wrap gap-4">
+                      {formData.images.map((url, i) => (
+                        <div key={i} className="relative group flex flex-col items-center">
+                          <div className="w-40 h-40 sm:w-52 sm:h-52 rounded-lg border-2 border-gray-200 overflow-hidden bg-gray-50 shadow-sm">
+                            <img
+                              src={url}
+                              alt=""
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeProductImage(i)}
+                            className="mt-2 px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                            aria-label="Remove image"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -720,126 +735,108 @@ export default function ProductsPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Product
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category / Subcategory
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Price
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Stock
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {products.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                    No products found. Create your first product!
-                  </td>
-                </tr>
-              ) : (
-                products.map((product) => {
-                  const categoryName = typeof product.category === 'object' 
-                    ? product.category.name 
-                    : 'Unknown';
-                  const subcategoryName = typeof product.subcategory === 'object' 
-                    ? product.subcategory.name 
-                    : 'Unknown';
-                  return (
-                    <tr key={product._id}>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                        {product.shortDescription && (
-                          <div className="text-sm text-gray-500 truncate max-w-xs">
-                            {product.shortDescription}
-                          </div>
-                        )}
-                        {product.sku && (
-                          <div className="text-xs text-gray-400">SKU: {product.sku}</div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div>{categoryName}</div>
-                        <div className="text-xs text-gray-400">→ {subcategoryName}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {product.useDynamicPricing ? (
-                          <div>
-                            <div className="font-medium text-blue-600">Dynamic Pricing</div>
-                            <div className="text-xs text-gray-500">
-                              {product.weightInGrams}g • {product.metalType}
-                            </div>
-                          </div>
-                        ) : (
-                          <div>
-                            <div className="font-medium">${product.price?.toFixed(2) || '0.00'}</div>
-                            {product.compareAtPrice && (
-                              <div className="text-xs text-gray-400 line-through">
-                                ${product.compareAtPrice.toFixed(2)}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {product.stock ?? 0}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-col gap-1">
-                          <span
-                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              product.isActive
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}
-                          >
-                            {product.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                          {product.isFeatured && (
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                              Featured
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => handleEdit(product)}
-                          className="text-blue-600 hover:text-blue-900 mr-4"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product._id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {products.length === 0 ? (
+            <div className="col-span-full bg-white rounded-xl shadow-md border border-gray-200 p-12 text-center text-gray-500">
+              No products found. Create your first product!
+            </div>
+          ) : (
+            products.map((product) => {
+              const categoryName = typeof product.category === 'object'
+                ? product.category.name
+                : 'Unknown';
+              const subcategoryName = typeof product.subcategory === 'object'
+                ? product.subcategory.name
+                : 'Unknown';
+              const firstImage = product.images?.[0];
+              return (
+                <div
+                  key={product._id}
+                  className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow flex flex-col"
+                >
+                  <div className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
+                    {firstImage ? (
+                      <img
+                        src={firstImage}
+                        alt=""
+                        className="w-full h-full object-contain"
+                        title={product.name}
+                      />
+                    ) : (
+                      <span className="text-gray-400 text-sm">No image</span>
+                    )}
+                  </div>
+                  <div className="p-4 flex flex-col flex-1">
+                    <h3 className="font-semibold text-gray-900 truncate" title={product.name}>
+                      {product.name}
+                    </h3>
+                    {(product.description || product.sizeLength) && (
+                      <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">
+                        {[product.sizeLength, product.description].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
+                    <div className="mt-2 text-xs text-gray-500">
+                      {categoryName} → {subcategoryName}
+                    </div>
+                    {product.sku && (
+                      <div className="text-xs text-gray-400 mt-0.5">SKU: {product.sku}</div>
+                    )}
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      {product.useDynamicPricing ? (
+                        <span className="text-sm font-medium text-blue-600">
+                          Dynamic · {product.weightInGrams}g
+                        </span>
+                      ) : (
+                        <span className="text-sm font-medium text-gray-900">
+                          ${product.price?.toFixed(2) ?? '0.00'}
+                        </span>
+                      )}
+                      <span className="text-sm text-gray-500">Stock: {product.stock ?? 0}</span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      <span
+                        className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                          product.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {product.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                      {product.isFeatured && (
+                        <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                          Featured
+                        </span>
+                      )}
+                      {product.images?.length > 1 && (
+                        <span className="px-2 py-0.5 text-xs text-gray-500">
+                          +{product.images.length - 1} img
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-4 flex gap-2 pt-3 border-t border-gray-100">
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(product)}
+                        className="flex-1 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(product._id)}
+                        className="py-2 px-3 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
         {totalCount > limit && (
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+          <div className="mt-6 flex items-center justify-between">
             <p className="text-sm text-gray-600">
               Showing {(page - 1) * limit + 1}–{Math.min(page * limit, totalCount)} of {totalCount}
             </p>

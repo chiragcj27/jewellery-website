@@ -17,7 +17,8 @@ interface ExcelRow {
   category?: string;
   subcategory?: string;
   description?: string;
-  shortDescription?: string;
+  shortDescription?: string; // Legacy Excel: used when description column held size/length
+  sizeLength?: string; // Size/Length e.g. "7 inches", "18 cm"
   price?: number | string;
   compareAtPrice?: number | string;
   sku?: string;
@@ -48,6 +49,7 @@ interface BulkUploadResult {
   errorCount: number;
   errors: ValidationError[];
   createdProducts?: string[];
+  updatedProducts?: string[];
 }
 
 /**
@@ -125,6 +127,10 @@ async function validateRow(
   // Required fields
   if (!row.name || String(row.name).trim() === '') {
     errors.push({ row: rowIndex, field: 'name', message: 'Name is required' });
+  }
+
+  if (!row.sku || String(row.sku).trim() === '') {
+    errors.push({ row: rowIndex, field: 'sku', message: 'SKU is required (used for unique product slug)' });
   }
 
   if (!row.category || String(row.category).trim() === '') {
@@ -369,8 +375,9 @@ export async function bulkUpload(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // All rows are valid, proceed with bulk insertion
+    // All rows are valid, proceed with bulk upsert (create or update by SKU)
     const createdProducts: string[] = [];
+    const updatedProducts: string[] = [];
     const insertionErrors: ValidationError[] = [];
 
     for (let i = 0; i < rows.length; i++) {
@@ -437,16 +444,30 @@ export async function bulkUpload(req: Request, res: Response): Promise<void> {
           }
         }
 
+        const sku = String(row.sku).trim();
+        const slug = slugify(sku);
+        const categoryObjId = new mongoose.Types.ObjectId(categoryId);
+        const subcategoryObjId = new mongoose.Types.ObjectId(subcategoryId);
+
+        // New format: description, sizeLength. Old Excel: description column = size/length, shortDescription = description
+        const descCol = row.description ? String(row.description).trim() : undefined;
+        const shortDescCol = row.shortDescription ? String(row.shortDescription).trim() : undefined;
+        const sizeLengthCol = row.sizeLength ? String(row.sizeLength).trim() : undefined;
+        const description = sizeLengthCol !== undefined
+          ? (descCol || shortDescCol || undefined)
+          : (shortDescCol || descCol || undefined);
+        const sizeLength = sizeLengthCol || (shortDescCol && descCol ? descCol : undefined);
+
         const productData = {
           name: String(row.name).trim(),
-          slug: slugify(String(row.name).trim()),
-          category: new mongoose.Types.ObjectId(categoryId),
-          subcategory: new mongoose.Types.ObjectId(subcategoryId),
-          description: row.description ? String(row.description).trim() : undefined,
-          shortDescription: row.shortDescription ? String(row.shortDescription).trim() : undefined,
+          slug,
+          category: categoryObjId,
+          subcategory: subcategoryObjId,
+          description,
+          sizeLength,
           price: parseNumber(row.price),
           compareAtPrice: parseNumber(row.compareAtPrice),
-          sku: row.sku ? String(row.sku).trim() : undefined,
+          sku,
           stock: parseNumber(row.stock) ?? 0,
           isActive: row.isActive !== undefined ? parseBoolean(row.isActive) : true,
           isFeatured: row.isFeatured !== undefined ? parseBoolean(row.isFeatured) : false,
@@ -459,9 +480,20 @@ export async function bulkUpload(req: Request, res: Response): Promise<void> {
           useDynamicPricing: row.useDynamicPricing !== undefined ? parseBoolean(row.useDynamicPricing) : false,
         };
 
-        const product = new Product(productData);
-        await product.save();
-        createdProducts.push(product._id.toString());
+        const existing = await Product.findOne({
+          category: categoryObjId,
+          subcategory: subcategoryObjId,
+          slug,
+        });
+
+        if (existing) {
+          await Product.findByIdAndUpdate(existing._id, productData, { runValidators: true });
+          updatedProducts.push(existing._id.toString());
+        } else {
+          const product = new Product(productData);
+          await product.save();
+          createdProducts.push(product._id.toString());
+        }
       } catch (error: unknown) {
         insertionErrors.push({
           row: rowNumber,
@@ -471,17 +503,24 @@ export async function bulkUpload(req: Request, res: Response): Promise<void> {
       }
     }
 
+    const totalProcessed = createdProducts.length + updatedProducts.length;
+    const messageParts: string[] = [];
+    if (createdProducts.length > 0) messageParts.push(`${createdProducts.length} created`);
+    if (updatedProducts.length > 0) messageParts.push(`${updatedProducts.length} updated`);
+    const summary = messageParts.length > 0 ? messageParts.join(', ') : '0 products processed';
+
     const result: BulkUploadResult = {
       success: insertionErrors.length === 0,
       message:
         insertionErrors.length === 0
-          ? `Successfully created ${createdProducts.length} products${imageFilesMap.size > 0 ? ` with ${imageFilesMap.size} images` : ''}`
-          : `Created ${createdProducts.length} products with ${insertionErrors.length} errors`,
+          ? `Successfully processed ${summary}${imageFilesMap.size > 0 ? ` (${imageFilesMap.size} images)` : ''}`
+          : `Processed ${summary} with ${insertionErrors.length} errors`,
       totalRows: rows.length,
-      successCount: createdProducts.length,
+      successCount: totalProcessed,
       errorCount: insertionErrors.length,
       errors: insertionErrors,
       createdProducts,
+      updatedProducts,
     };
 
     res.status(insertionErrors.length === 0 ? 201 : 207).json(result);
@@ -509,17 +548,17 @@ export async function downloadTemplate(_req: Request, res: Response): Promise<vo
     const categories = await Category.find({ isActive: true }).select('name slug');
     const subcategories = await Subcategory.find({}).populate('category', 'name');
 
-    // Create template data with example row
+    // Create template data with example row (SKU is required - used for URL slug)
     const templateData = [
       {
         name: 'Example Product Name',
+        sku: 'PROD-001',
         category: categories.length > 0 ? categories[0].name : 'Rings',
         subcategory: subcategories.length > 0 ? (subcategories[0] as any).name : 'Gold Rings',
         description: 'Detailed product description',
-        shortDescription: 'Brief product description',
+        sizeLength: '7 inches',
         price: 99.99,
         compareAtPrice: 149.99,
-        sku: 'PROD-001',
         stock: 10,
         isActive: true,
         isFeatured: false,
@@ -564,20 +603,23 @@ export async function downloadTemplate(_req: Request, res: Response): Promise<vo
     // Add instructions sheet
     const instructions = [
       { Instruction: '1. Fill the Products sheet with your product data' },
-      { Instruction: '2. Required fields: name, category, subcategory' },
+      { Instruction: '2. Required fields: name, sku, category, subcategory' },
+      { Instruction: '   - SKU must be unique per product (used for URL slug)' },
+      { Instruction: '   - Each SKU must be unique within same category/subcategory' },
       { Instruction: '3. For pricing, choose one of two options:' },
       { Instruction: '   a) Fixed price: Set price field, leave useDynamicPricing as false' },
       { Instruction: '   b) Weight-based: Set weightInGrams, metalType, useDynamicPricing=true' },
-      { Instruction: '4. For images, you have 3 options:' },
+      { Instruction: '4. SKU is used to generate the product URL slug - ensure it is unique' },
+      { Instruction: '5. For images, you have 3 options:' },
       { Instruction: '   a) Provide full URLs (https://...)' },
       { Instruction: '   b) Provide filenames (image1.jpg) and include images in a ZIP with this Excel file' },
       { Instruction: '   c) Leave empty and add images later' },
-      { Instruction: '5. Use comma to separate multiple images' },
-      { Instruction: '6. Check the Reference sheet for valid categories and subcategories' },
-      { Instruction: '7. Boolean fields accept: true/false, yes/no, 1/0' },
-      { Instruction: '8. Metal types: 22KT, 18KT, 20KT, 24KT, Silver, Platinum, etc.' },
-      { Instruction: '9. wastagePercentage: Optional percentage for wastage (e.g., 8 = 8%)' },
-      { Instruction: '10. Upload just the Excel file, or a ZIP containing Excel + image files' },
+      { Instruction: '6. Use comma to separate multiple images' },
+      { Instruction: '7. Check the Reference sheet for valid categories and subcategories' },
+      { Instruction: '8. Boolean fields accept: true/false, yes/no, 1/0' },
+      { Instruction: '9. Metal types: 22KT, 18KT, 20KT, 24KT, Silver, Platinum, etc.' },
+      { Instruction: '10. wastagePercentage: Optional percentage for wastage (e.g., 8 = 8%)' },
+      { Instruction: '11. Upload just the Excel file, or a ZIP containing Excel + image files' },
     ];
     const instructionsSheet = XLSX.utils.json_to_sheet(instructions);
     XLSX.utils.book_append_sheet(workbook, instructionsSheet, 'Instructions');

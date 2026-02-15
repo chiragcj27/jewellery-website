@@ -4,6 +4,7 @@ import * as productsController from '../controllers/products.controller';
 const router = Router();
 
 router.get('/', productsController.getAll);
+router.get('/sku/:sku', productsController.getBySku);
 router.get('/:id', productsController.getById);
 router.post('/', productsController.create);
 router.put('/:id', productsController.update);

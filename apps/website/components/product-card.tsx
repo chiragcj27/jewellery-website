@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
 import { useAuth } from "@/context/AuthProvider";
+import { useCartStore } from "@/store/cartStore";
+import { useWishlistStore } from "@/store/wishlistStore";
 
 export interface ProductCardProps {
   image: string;
@@ -15,9 +16,16 @@ export interface ProductCardProps {
   metalType?: string;
   weightInGrams?: number;
   wastagePercentage?: number;
-  /** Product id/slug for link (e.g. product/[slug]) */
+
   productId?: string;
   sku?: string;
+  sizeLength?: string;
+  /** Numeric price for cart/wishlist (required for Add to Bag) */
+  price?: number;
+  /** Numeric MRP/compare-at price for cart/wishlist */
+  mrp?: number;
+  /** Product slug for wishlist link (e.g. from /product/[slug]) */
+  slug?: string;
 }
 
 export default function ProductCard({
@@ -26,19 +34,78 @@ export default function ProductCard({
   currentPrice,
   originalPrice,
   discountLabel,
-  offerTag = "Buy 1 Get 1",
+  offerTag,
   metalType,
   weightInGrams,
   wastagePercentage,
   productId,
   sku,
+  sizeLength,
+  price,
+  mrp,
+  slug,
 }: ProductCardProps) {
   const { isWholesaler } = useAuth();
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const addToCart = useCartStore((state) => state.addItem);
+  const addToWishlist = useWishlistStore((state) => state.addItem);
+  const removeFromWishlist = useWishlistStore((state) => state.removeItem);
+  const isWishlisted = useWishlistStore((state) => state.isInWishlist(sku ?? ""));
+
   const showWholesalerView = isWholesaler && (metalType != null || weightInGrams != null || wastagePercentage != null);
 
-  return (
-    <article className="flex flex-col bg-white rounded-none overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 min-w-[160px] sm:min-w-[200px] md:min-w-[220px]">
+  const itemId = sku ?? productId ?? "";
+  const canAddToCart = itemId && (price != null || showWholesalerView);
+  const productHref = sku ? `/product/${encodeURIComponent(sku)}` : productId || undefined;
+
+  const handleAddToBag = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!canAddToCart) return;
+    if (showWholesalerView && weightInGrams != null && metalType) {
+      addToCart({
+        id: itemId,
+        title,
+        image,
+        price: 0,
+        mrp: 0,
+        sku: sku ?? itemId,
+        weightInGrams,
+        metalType,
+        wastagePercentage,
+      });
+    } else if (price != null) {
+      addToCart({
+        id: itemId,
+        title,
+        image,
+        price,
+        mrp: mrp ?? price,
+        sku: sku ?? itemId,
+      });
+    }
+  };
+
+  const handleWishlistClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!itemId || price == null) return;
+    if (isWishlisted) {
+      removeFromWishlist(itemId);
+    } else {
+      addToWishlist({
+        id: itemId,
+        title,
+        image,
+        price,
+        mrp: mrp ?? price,
+        sku: sku ?? itemId,
+        slug,
+      });
+    }
+  };
+
+  const cardContent = (
+    <>
       <div className="relative aspect-4/5 bg-[#f8f5ef]">
         {/* Offer tag */}
         {offerTag && (
@@ -61,15 +128,16 @@ export default function ProductCard({
           {/* Wishlist button */}
           <button
             type="button"
-            onClick={() => setIsWishlisted((v) => !v)}
+            onClick={handleWishlistClick}
+            disabled={!itemId || price == null}
             aria-pressed={isWishlisted}
             aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 bg-white text-gray-900 hover:bg-gray-100 transition-colors"
+            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 bg-white text-gray-900 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg
               viewBox="0 0 24 24"
               className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${
-                isWishlisted ? "fill-black text-black" : "text-black"
+                isWishlisted ? "fill-red-500 text-red-500" : "text-black"
               }`}
               aria-hidden="true"
             >
@@ -84,7 +152,9 @@ export default function ProductCard({
           {/* Add to bag button */}
           <button
             type="button"
-            className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-semibold tracking-wide uppercase bg-[#f5f0e6] text-gray-900 border border-gray-300 hover:bg-black hover:text-white transition-colors"
+            onClick={handleAddToBag}
+            disabled={!canAddToCart}
+            className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-semibold tracking-wide uppercase bg-[#f5f0e6] text-gray-900 border border-gray-300 hover:bg-black hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Add to Bag
           </button>
@@ -93,14 +163,8 @@ export default function ProductCard({
 
       {/* Details */}
       <div className="px-2 sm:px-3 pt-2 sm:pt-3 pb-3 sm:pb-4 space-y-1 bg-white">
-        <h3 className="text-xs sm:text-sm font-medium text-gray-900 line-clamp-2 min-h-[2.5rem] sm:min-h-10">
-          {productId ? (
-            <Link href={productId} className="hover:underline">
-              {title}
-            </Link>
-          ) : (
-            title
-          )}
+        <h3 className="text-xs sm:text-sm font-medium text-gray-900 line-clamp-2 min-h-10">
+          {title}
         </h3>
         {/* Wholesaler: show purity (metalType) and wastage instead of price */}
         {showWholesalerView ? (
@@ -123,22 +187,39 @@ export default function ProductCard({
                 {metalType} • {weightInGrams}g
               </div>
             )}
-            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
-              <span className="font-semibold text-gray-900">{currentPrice}</span>
-              {originalPrice && (
-                <span className="text-[10px] sm:text-xs text-gray-500 line-through">
-                  {originalPrice}
-                </span>
-              )}
-              {discountLabel && (
-                <span className="text-[10px] sm:text-xs font-semibold text-green-600">
-                  {discountLabel}
-                </span>
+            <div className="flex items-center justify-between gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <span className="font-semibold text-gray-900">{currentPrice}</span>
+                {originalPrice && (
+                  <span className="text-[10px] sm:text-xs text-gray-500 line-through">
+                    {originalPrice}
+                  </span>
+                )}
+                {discountLabel && (
+                  <span className="text-[10px] sm:text-xs font-semibold text-green-600">
+                    {discountLabel}
+                  </span>
+                )}
+              </div>
+              {sizeLength && (
+                <span className="font-bold text-gray-900 shrink-0 ml-1">{sizeLength}</span>
               )}
             </div>
           </>
         )}
       </div>
+    </>
+  );
+
+  return (
+    <article className="flex flex-col bg-white rounded-none overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 min-w-[160px] sm:min-w-[200px] md:min-w-[220px]">
+      {productHref ? (
+        <Link href={productHref} className="flex flex-col flex-1 min-h-0">
+          {cardContent}
+        </Link>
+      ) : (
+        cardContent
+      )}
     </article>
   );
 }

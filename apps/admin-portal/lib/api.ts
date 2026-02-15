@@ -33,7 +33,7 @@ export interface ProductData {
   category: string;
   subcategory: string;
   description?: string;
-  shortDescription?: string;
+  sizeLength?: string;
   images?: string[];
   imageAssetIds?: string[];
   price?: number;
@@ -53,8 +53,9 @@ export interface ProductData {
 
 export interface MetalRateData {
   metalType: string;
+  purityPercentage?: number | null;
   ratePerTenGrams: number;
-  makingChargePerGram: number;
+  makingChargesPercentage: number;
   gstPercentage: number;
   isActive?: boolean;
 }
@@ -237,11 +238,18 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     }).then(res => res.json()),
-    update: (id: string, data: Partial<MetalRateData>) => fetch(`${API_BASE_URL}/api/metal-rates/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }).then(res => res.json()),
+    update: async (id: string, data: Partial<MetalRateData>) => {
+      const res = await fetch(`${API_BASE_URL}/api/metal-rates/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        return { success: false, error: json.error || `Request failed (${res.status})` };
+      }
+      return json;
+    },
     delete: (id: string) => fetch(`${API_BASE_URL}/api/metal-rates/${id}`, {
       method: 'DELETE',
     }).then(res => res.json()),

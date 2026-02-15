@@ -12,12 +12,12 @@ This document shows example data for bulk product upload. Use this as a referenc
 
 ## Complete Example (All Fields)
 
-| name | category | subcategory | description | shortDescription | price | compareAtPrice | sku | stock | isActive | isFeatured | displayOrder | images | filterValues |
-|------|----------|-------------|-------------|------------------|-------|----------------|-----|-------|----------|------------|--------------|--------|--------------|
-| Classic Gold Ring | Rings | Gold Rings | Beautiful handcrafted 24k gold ring with intricate traditional designs. Perfect for weddings and special occasions. | 24k gold ring with intricate designs | 999.99 | 1499.99 | RING-GLD-001 | 25 | true | true | 1 | https://example.com/ring1.jpg,https://example.com/ring2.jpg | {"material":"Gold","purity":"24k","occasion":"Wedding"} |
-| Silver Necklace Set | Necklaces | Silver Necklaces | Elegant silver necklace set with matching earrings. Rhodium plated for extra shine and durability. | Silver necklace with earrings | 499.99 | 699.99 | NECK-SLV-001 | 15 | true | false | 2 | necklace1.jpg,necklace2.jpg | {"material":"Silver","color":"White"} |
-| Diamond Bracelet | Bracelets | Diamond Bracelets | Stunning diamond bracelet with natural diamonds set in 18k white gold. Certified diamonds with excellent cut. | Diamond bracelet in white gold | 1999.99 | | BRAC-DIA-001 | 5 | true | true | 3 | | {"material":"White Gold","stones":"Diamond"} |
-| Pearl Earrings | Earrings | Pearl Earrings | Classic pearl drop earrings with AAA grade pearls. Sterling silver posts with secure butterfly backs. | AAA grade pearl earrings | 299.99 | 399.99 | EAR-PRL-001 | 50 | true | false | 4 | https://cdn.example.com/pearl1.jpg | {"material":"Pearl","metal":"Silver"} |
+| name | category | subcategory | description | sizeLength | price | compareAtPrice | sku | stock | isActive | isFeatured | displayOrder | images | filterValues |
+|------|----------|-------------|-------------|------------|-------|----------------|-----|-------|----------|------------|--------------|--------|--------------|
+| Classic Gold Ring | Rings | Gold Rings | Beautiful handcrafted 24k gold ring with intricate traditional designs. Perfect for weddings and special occasions. | 7 inches | 999.99 | 1499.99 | RING-GLD-001 | 25 | true | true | 1 | https://example.com/ring1.jpg,https://example.com/ring2.jpg | {"material":"Gold","purity":"24k","occasion":"Wedding"} |
+| Silver Necklace Set | Necklaces | Silver Necklaces | Elegant silver necklace set with matching earrings. Rhodium plated for extra shine and durability. | 18 inches | 499.99 | 699.99 | NECK-SLV-001 | 15 | true | false | 2 | necklace1.jpg,necklace2.jpg | {"material":"Silver","color":"White"} |
+| Diamond Bracelet | Bracelets | Diamond Bracelets | Stunning diamond bracelet with natural diamonds set in 18k white gold. Certified diamonds with excellent cut. | 7.5 inches | 1999.99 | | BRAC-DIA-001 | 5 | true | true | 3 | | {"material":"White Gold","stones":"Diamond"} |
+| Pearl Earrings | Earrings | Pearl Earrings | Classic pearl drop earrings with AAA grade pearls. Sterling silver posts with secure butterfly backs. | One size | 299.99 | 399.99 | EAR-PRL-001 | 50 | true | false | 4 | https://cdn.example.com/pearl1.jpg | {"material":"Pearl","metal":"Silver"} |
 
 ## Example with ZIP File Images
 

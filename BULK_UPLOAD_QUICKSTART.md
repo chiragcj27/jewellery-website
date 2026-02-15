@@ -103,7 +103,7 @@ name: Gold Ring
 category: Rings
 subcategory: Gold Rings
 description: Beautiful handcrafted ring
-shortDescription: 24k gold ring
+sizeLength: 7 inches
 price: 999.99
 compareAtPrice: 1499.99
 sku: RING-001

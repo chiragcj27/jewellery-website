@@ -13,6 +13,7 @@
 
 #### Required Columns
 - [ ] `name` - Product name filled for every row
+- [ ] `sku` - Unique SKU for every row (used for URL slug, must be unique within category/subcategory)
 - [ ] `category` - Category name or slug (must exist in system)
 - [ ] `subcategory` - Subcategory name or slug (must exist in system)
 
@@ -37,13 +38,12 @@
 - [ ] **Boolean values** - Use true/false, yes/no, or 1/0 (not True/False or YES/NO)
 - [ ] **Weight is positive** - If using dynamic pricing, weight must be > 0
 - [ ] **No mixed pricing** - Don't use both price AND dynamic pricing fields for same product
-- [ ] **Unique product names** - Each product name should be unique within same category/subcategory
+- [ ] **Unique SKU** - Each SKU must be unique within same category/subcategory
 
 #### Optional Fields
-- [ ] `description` - Detailed product description
-- [ ] `shortDescription` - Brief product description
+- [ ] `description` - Product description
+- [ ] `sizeLength` - Size/Length (e.g. 7 inches, 18 cm)
 - [ ] `compareAtPrice` - Original price for showing discounts
-- [ ] `sku` - Stock keeping unit (unique identifier)
 - [ ] `stock` - Quantity available (default: 0)
 - [ ] `isActive` - true/false (default: true)
 - [ ] `isFeatured` - true/false (default: false)
@@ -224,9 +224,9 @@ Total: ₹45,320
 **Cause:** Metal type doesn't exist, is inactive, or case doesn't match  
 **Fix:** Go to Metal Rates, add the metal type or activate it. Make sure case matches exactly (e.g., "22KT" not "22kt")
 
-### Error: "Product with this name already exists"
-**Cause:** Duplicate product name in same category/subcategory  
-**Fix:** Make product names unique or use different subcategory
+### Error: "E11000 duplicate key" or "Product with this slug already exists"
+**Cause:** Duplicate SKU in same category/subcategory (slug is derived from SKU)  
+**Fix:** Each product must have a unique SKU within its category. Use SKUs like RING-001, RING-002, etc.
 
 ### Error: "Upload failed"
 **Cause:** File corrupted or wrong format  
@@ -243,6 +243,7 @@ Before clicking "Upload", verify:
 ```
 ✓ Excel file has data
 ✓ No empty rows
+✓ Every row has unique SKU (unique within same category/subcategory)
 ✓ Category names match Reference sheet
 ✓ Subcategory names match Reference sheet
 ✓ Each product has either price OR (weight + metal type + useDynamicPricing)

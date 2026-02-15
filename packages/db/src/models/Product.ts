@@ -6,7 +6,7 @@ export interface IProduct extends Document {
   name: string;
   slug: string;
   description?: string;
-  shortDescription?: string;
+  sizeLength?: string; // e.g. "7 inches", "18 cm"
   images: string[];
   category: mongoose.Types.ObjectId | ICategory;
   subcategory: mongoose.Types.ObjectId | ISubcategory;
@@ -45,7 +45,7 @@ const ProductSchema: Schema = new Schema(
       type: String,
       trim: true,
     },
-    shortDescription: {
+    sizeLength: {
       type: String,
       trim: true,
     },

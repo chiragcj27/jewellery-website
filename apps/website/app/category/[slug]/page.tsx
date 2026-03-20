@@ -55,6 +55,7 @@ interface Product {
   weightInGrams?: number;
   metalType?: string;
   wastagePercentage?: number;
+  makingChargesPercentage?: number;
 }
 
 export default function CategoryPage() {
@@ -163,6 +164,7 @@ export default function CategoryPage() {
         useDynamicPricing: p.useDynamicPricing ?? false,
         weightInGrams: p.weightInGrams,
         metalType: p.metalType,
+        makingChargesPercentage: p.makingChargesPercentage,
       },
       metalRates
     );
@@ -324,6 +326,7 @@ export default function CategoryPage() {
                   useDynamicPricing: apiProduct.useDynamicPricing ?? false,
                   weightInGrams: apiProduct.weightInGrams,
                   metalType: apiProduct.metalType,
+                  makingChargesPercentage: apiProduct.makingChargesPercentage,
                 },
                 metalRates
               );
@@ -349,6 +352,7 @@ export default function CategoryPage() {
                   metalType={apiProduct.metalType}
                   weightInGrams={apiProduct.weightInGrams}
                   wastagePercentage={apiProduct.wastagePercentage}
+                  makingChargesPercentage={apiProduct.makingChargesPercentage}
                   sizeLength={apiProduct.sizeLength}
                   price={priceToShow}
                   mrp={apiProduct.compareAtPrice ?? undefined}

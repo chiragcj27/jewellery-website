@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
@@ -201,9 +202,18 @@ export default function AuthPage() {
         <div className="w-full max-w-[420px]">
           <Link
             href="/"
-            className="belleza-regular text-2xl text-black inline-block mb-6 hover:opacity-70 transition-opacity"
+            className="inline-block mb-6 hover:opacity-70 transition-opacity"
           >
-            ZIVARA
+            <div className="relative h-8 sm:h-10 w-52 sm:w-64">
+              <Image
+                src="/logo-text.png"
+                alt="The Swarnorra by Soni Ramniklal Jewellers"
+                fill
+                className="object-contain"
+                sizes="256px"
+                priority
+              />
+            </div>
           </Link>
 
           <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] border border-black/6 p-8 sm:p-10">
@@ -213,7 +223,7 @@ export default function AuthPage() {
             <p className="text-sm text-black/55 mb-5">
               {accountType === "customer"
                 ? mode === "signin"
-                  ? "Sign in to continue to ZIVARA"
+                  ? "Sign in to continue to The Swarnorra"
                   : "Join us for a seamless shopping experience"
                 : mode === "signin"
                   ? "Sign in to your business account"
@@ -523,7 +533,7 @@ export default function AuthPage() {
           </div>
 
           <p className="mt-6 text-center text-xs text-black/45 leading-relaxed">
-            By continuing, you agree to ZIVARA&apos;s{" "}
+            By continuing, you agree to The Swarnorra&apos;s{" "}
             <Link href="/terms" className="underline hover:text-black/60 transition-colors">
               Terms of Service
             </Link>{" "}

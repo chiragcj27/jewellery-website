@@ -126,7 +126,7 @@ export default function Banner() {
   }
 
   return (
-    <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden">
+    <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden bg-black">
       {/* Slides Container */}
       <div
         className="flex transition-transform duration-700 ease-in-out h-full"
@@ -144,13 +144,13 @@ export default function Banner() {
                 src={slide.image}
                 alt={slide.title || 'Banner'}
                 fill
-                className="object-cover"
+                className="object-contain sm:object-cover"
                 sizes="100vw"
                 priority={index === 0}
               />
               {/* Dark overlay for text legibility */}
               <div
-                className="absolute inset-0 bg-black/40"
+                className="absolute inset-0 bg-black/10"
                 aria-hidden
               />
               {/* Content Overlay */}

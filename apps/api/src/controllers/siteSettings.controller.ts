@@ -32,7 +32,7 @@ export const getSiteSettings = async (_req: Request, res: Response) => {
  */
 export const updateSiteSettings = async (req: Request, res: Response) => {
   try {
-    const { preHeaderText, preHeaderLink, whatsappEnquiryNumber } = req.body;
+    const { preHeaderText, preHeaderLink, whatsappEnquiryNumber, discountPercentage, discountReason } = req.body;
 
     let settings = await SiteSettings.findOne();
 
@@ -41,11 +41,15 @@ export const updateSiteSettings = async (req: Request, res: Response) => {
         preHeaderText: preHeaderText || '✨ Free shipping on orders over $150',
         preHeaderLink: preHeaderLink || '',
         whatsappEnquiryNumber: whatsappEnquiryNumber || '',
+        discountPercentage: discountPercentage ?? 0,
+        discountReason: discountReason || '',
       });
     } else {
       if (preHeaderText !== undefined) settings.preHeaderText = preHeaderText;
       if (preHeaderLink !== undefined) settings.preHeaderLink = preHeaderLink;
       if (whatsappEnquiryNumber !== undefined) settings.whatsappEnquiryNumber = whatsappEnquiryNumber;
+      if (discountPercentage !== undefined) settings.discountPercentage = discountPercentage;
+      if (discountReason !== undefined) settings.discountReason = discountReason;
       await settings.save();
     }
 

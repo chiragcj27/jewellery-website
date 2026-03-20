@@ -5,6 +5,10 @@ export interface ISiteSettings extends Document {
   preHeaderLink?: string;
   /** WhatsApp number for business enquiries (with country code, no +) e.g. 919876543210 */
   whatsappEnquiryNumber?: string;
+  /** Global discount percentage applied to all products (0 = disabled) */
+  discountPercentage?: number;
+  /** Reason for the discount, e.g. "Valentine", "Diwali" */
+  discountReason?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +27,17 @@ const SiteSettingsSchema: Schema = new Schema(
     whatsappEnquiryNumber: {
       type: String,
       trim: true,
+    },
+    discountPercentage: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+    discountReason: {
+      type: String,
+      trim: true,
+      default: '',
     },
   },
   {

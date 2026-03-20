@@ -1,8 +1,8 @@
 const FEATURES = [
   {
-    title: "SKIN SAFE",
+    title: "GENUINE 22KT GOLD",
     description:
-      "Our jewelry is hypoallergenic and skin-safe, crafted with care to ensure comfort for all skin types. Enjoy beautiful, irritation-free wear every day, knowing each piece is designed with your well-being in mind.",
+      "Every piece is crafted in real 22KT gold — no gold plating, no colour fading. You receive jewellery with the rich glow and lasting value only true 22KT gold can offer.",
     icon: (
       <svg
         viewBox="0 0 64 64"
@@ -21,9 +21,9 @@ const FEATURES = [
     ),
   },
   {
-    title: "18K GOLD VERMEIL",
+    title: "BIS HALLMARKED PURITY",
     description:
-      "Our jewelry is crafted from premium metals like surgical steel, sterling silver, and thick 18k gold plating, ensuring durability and lasting shine. Experience luxury and quality with every piece, designed to stand the test of time.",
+      "Our jewellery is BIS–hallmarked to assure you of the purity you are paying for. Your invoice clearly mentions gold purity and net weight, so you always know exactly what you own.",
     icon: (
       <svg
         viewBox="0 0 64 64"
@@ -40,9 +40,9 @@ const FEATURES = [
     ),
   },
   {
-    title: "AUTHENTIC DIAMONDS",
+    title: "TRUSTED JEWELLER PROMISE",
     description:
-      "Our lab-grown diamonds are SGL Certified, ensuring the highest standards of quality and authenticity same like natural diamonds. Each diamond undergoes rigorous testing to guarantee its brilliance and ethical origins. Shine with confidence in every sparkly moment.",
+      "Backed by a trusted jeweller, our pieces come with transparent pricing, fair valuation and dedicated after–sales support. From servicing to future exchange or buyback as per policy, we are here for you beyond the purchase.",
     icon: (
       <svg
         viewBox="0 0 64 64"

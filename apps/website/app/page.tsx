@@ -142,14 +142,14 @@ export default function Home() {
       <section>
         <div className="container mx-auto px-4 py-6 sm:py-8 md:py-10">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mt-6 sm:mt-8 md:mt-10 mb-3 sm:mb-4">
-            Zivara Top Styles
+            The Swarnorra Top Styles
           </h2>
         </div>
       </section>
       <TopStylesSection />
-      <FeaturedBanner heading="Glamorous Collection" imageUrl="https://palmonas.com/cdn/shop/files/Home_Page_V4_4.jpg?v=1769580834&width=3840" />
+      <FeaturedBanner heading="" imageUrl="https://jewellery-website.s3.ap-south-1.amazonaws.com/assets/NEry58alFs3L4IYu.png" />
       <ImageCaraousel />
-      <FeaturedBanner heading="22KT Special Collection" imageUrl="https://palmonas.com/cdn/shop/files/9KT_flower_Web.png?v=1768650078&width=2000" />
+      <FeaturedBanner heading="Request your custom design" imageUrl="https://jewellery-website.s3.ap-south-1.amazonaws.com/assets/DrKF_ofE2aKQPEUi.png" />
       <section className="container mx-auto px-4 py-8 sm:py-10 md:py-12">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-6 sm:mb-8 md:mb-10">Featured Products</h2>
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
@@ -178,6 +178,97 @@ export default function Home() {
           />
         </div>
       </section>
+
+      {/* About Us & Store Section */}
+      <section className="w-full bg-[#f5f0e6] py-12 sm:py-16 md:py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10 sm:mb-14">
+            <p className="text-[10px] sm:text-xs uppercase tracking-[0.35em] text-black/40 mb-3 font-bold">
+              Est. Since 4 Generations
+            </p>
+            <h2 className="belleza-regular text-2xl sm:text-3xl md:text-4xl tracking-wide text-black mb-4 sm:mb-6">
+              About Us
+            </h2>
+            <div className="flex items-center justify-center mb-6">
+              <span className="h-px w-12 bg-black/20" />
+              <span className="mx-3 text-black/30 text-xs">✦</span>
+              <span className="h-px w-12 bg-black/20" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 md:gap-12 max-w-6xl mx-auto">
+            {/* Story */}
+            <div className="space-y-5 sm:space-y-6 flex flex-col justify-center">
+              <h3 className="belleza-regular text-xl sm:text-2xl md:text-3xl tracking-wide text-black">
+                The Swarnorra by Soni Ramniklal Jewellers
+              </h3>
+              <p className="text-sm sm:text-base text-black/75 leading-relaxed">
+                TheSwarnorra by Soni Ramniklal Jewellers is built on a proud legacy of over 90 years and four generations of jewellery craftsmanship. What began as a family tradition has grown into a trusted name known for purity, quality, and timeless design.
+              </p>
+              <p className="text-sm sm:text-base text-black/75 leading-relaxed">
+                Blending heritage artistry with modern elegance, we create fine gold and diamond jewellery that celebrates life&apos;s most meaningful moments. Every piece reflects decades of experience, careful craftsmanship, and a commitment to excellence.
+              </p>
+              <p className="text-sm sm:text-base text-black/70 leading-relaxed italic">
+                At TheSwarnorra, we don&apos;t just craft jewellery—we create pieces of legacy that can be cherished and passed on for generations.
+              </p>
+
+              {/* Store Info */}
+              <div className="mt-4 pt-6 border-t border-black/10 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-black rounded-full shrink-0">
+                    <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-black/50 font-semibold mb-1">Address</p>
+                    <p className="text-xs sm:text-sm text-black/70 leading-relaxed">Soni Ramniklal Jewellers, Bindal Complex, Gorelal Square, Gondia</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-black rounded-full shrink-0">
+                    <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-black/50 font-semibold mb-1">Contact</p>
+                    <a href="tel:7030995738" className="text-xs sm:text-sm text-black/70 hover:text-black transition-colors">7030995738</a>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-black rounded-full shrink-0">
+                    <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-black/50 font-semibold mb-1">Store Hours</p>
+                    <p className="text-xs sm:text-sm text-black/70">11:00 AM – 8:30 PM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Google Maps Embed */}
+            <div className="w-full h-[300px] sm:h-[350px] md:h-[400px] lg:h-full lg:min-h-[450px] rounded-lg overflow-hidden border border-black/10 shadow-sm">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3728.5!2d80.1929792!3d21.4586323!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a2baeb227dca293%3A0x6d2b0dddab57cc38!2sSONI%20RAMNIKLAL%20JEWELLERS!5e0!3m2!1sen!2sin!4v1"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Soni Ramniklal Jewellers - Store Location"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       <ShopWithConfidence />
     </div>
   );

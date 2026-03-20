@@ -100,10 +100,11 @@ export default function ImageCaraousel() {
         </div>
         <div className="w-full lg:w-[67%]">
           <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-[24px] 2xl:text-[30px] leading-[1.4] lg:pl-4 mb-[clamp(2rem,5vw,3rem)]">
-            We&apos;re a creative team born out of the jewelry trade, from
-            Mumbai to LA. We&apos;ve lived the chaos of exhibitions, product
-            drops, and client deadlines and built Chariot to make it all a
-            little easier.
+            Built on a proud legacy of over 90 years and four generations
+            of jewellery craftsmanship, TheSwarnorra by Soni Ramniklal
+            Jewellers blends heritage artistry with modern elegance to
+            create fine gold and diamond jewellery that celebrates
+            life&apos;s most meaningful moments.
           </h2>
         </div>
       </div>

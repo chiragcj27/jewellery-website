@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import PreHeader from "./pre-header";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -99,7 +100,14 @@ export default function Navbar() {
               
           {/* Brand Logo */}
           <Link href="/" className="shrink-0">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-black belleza-regular">The Swarnorra</h1>
+            <Image
+              src="/logo-text.png"
+              alt="The Swarnorra by Soni Ramniklal Jewellers"
+              width={280}
+              height={80}
+              className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto object-contain -mx-4"
+              priority
+            />
           </Link>
 
           {/* Search Bar - Hidden on mobile, shown on tablet+ */}

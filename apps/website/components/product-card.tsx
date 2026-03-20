@@ -16,6 +16,7 @@ export interface ProductCardProps {
   metalType?: string;
   weightInGrams?: number;
   wastagePercentage?: number;
+  makingChargesPercentage?: number;
 
   productId?: string;
   sku?: string;
@@ -38,6 +39,7 @@ export default function ProductCard({
   metalType,
   weightInGrams,
   wastagePercentage,
+  makingChargesPercentage,
   productId,
   sku,
   sizeLength,
@@ -46,7 +48,7 @@ export default function ProductCard({
   slug,
 }: ProductCardProps) {
   const { isWholesaler } = useAuth();
-  const addToCart = useCartStore((state) => state.addItem);
+  const { addItem: addToCart } = useCartStore();
   const addToWishlist = useWishlistStore((state) => state.addItem);
   const removeFromWishlist = useWishlistStore((state) => state.removeItem);
   const isWishlisted = useWishlistStore((state) => state.isInWishlist(sku ?? ""));
@@ -72,6 +74,7 @@ export default function ProductCard({
         weightInGrams,
         metalType,
         wastagePercentage,
+        makingChargesPercentage,
       });
     } else if (price != null) {
       addToCart({

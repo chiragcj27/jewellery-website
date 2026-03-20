@@ -23,7 +23,13 @@ export interface IProduct extends Document {
   weightInGrams?: number; // Weight in grams
   metalType?: string; // e.g., "22KT", "18KT", "20KT", etc. (purity)
   wastagePercentage?: number; // e.g. 8 = 8% wastage (for wholesaler display & calculation)
+  makingChargesPercentage?: number; // Product-specific making charges override
   useDynamicPricing: boolean; // If true, calculate price from weight and metal rate
+  // Stone properties
+  hasStone: boolean;
+  stoneName?: string; // e.g. "Diamond", "Ruby", "Emerald"
+  stoneWeight?: number; // Weight of stone in carats
+  stoneValue?: number; // Value per carat in currency
   createdAt: Date;
   updatedAt: Date;
 }
@@ -113,9 +119,30 @@ const ProductSchema: Schema = new Schema(
       type: Number,
       min: 0,
     },
+    makingChargesPercentage: {
+      type: Number,
+      min: 0,
+    },
     useDynamicPricing: {
       type: Boolean,
       default: false,
+    },
+    // Stone properties
+    hasStone: {
+      type: Boolean,
+      default: false,
+    },
+    stoneName: {
+      type: String,
+      trim: true,
+    },
+    stoneWeight: {
+      type: Number,
+      min: 0,
+    },
+    stoneValue: {
+      type: Number,
+      min: 0,
     },
   },
   {

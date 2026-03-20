@@ -20,11 +20,18 @@ export interface ProductData {
   metalType?: string;
   useDynamicPricing: boolean;
   price?: number;
+  makingChargesPercentage?: number;
+  hasStone?: boolean;
+  stoneName?: string;
+  stoneWeight?: number;
+  stoneValue?: number;
 }
 
 export interface PriceBreakdown {
   goldCost: number;
   makingCharges: number;
+  stoneCharges: number;
+  stoneName?: string;
   subtotal: number;
   gstAmount: number;
   finalPrice: number;
@@ -46,16 +53,30 @@ export function getEffectiveWeight(
  */
 export function calculatePrice(
   weightInGrams: number,
-  metalRate: MetalRateData
+  metalRate: MetalRateData,
+  customMakingChargesPercentage?: number,
+  stoneProperties?: {
+    hasStone?: boolean;
+    stoneName?: string;
+    stoneWeight?: number;
+    stoneValue?: number;
+  }
 ): PriceBreakdown {
   // Gold value = weight × (rate per 10g ÷ 10)
   const goldCost = (metalRate.ratePerTenGrams / 10) * weightInGrams;
 
-  // Making charges = gold value × making charges %
-  const makingCharges = goldCost * (metalRate.makingChargesPercentage / 100);
+  // Making charges = gold value × making charges % override if present, else fallback
+  const makingChargesPercent = customMakingChargesPercentage ?? metalRate.makingChargesPercentage;
+  const makingCharges = goldCost * (makingChargesPercent / 100);
 
-  // Subtotal = gold value + making charges
-  const subtotal = goldCost + makingCharges;
+  // Stone charges = stone value × stone weight (if stone is present)
+  let stoneCharges = 0;
+  if (stoneProperties?.hasStone && stoneProperties.stoneValue && stoneProperties.stoneWeight) {
+    stoneCharges = stoneProperties.stoneValue * stoneProperties.stoneWeight;
+  }
+
+  // Subtotal = gold value + making charges + stone charges
+  const subtotal = goldCost + makingCharges + stoneCharges;
 
   // Calculate GST
   const gstAmount = (subtotal * metalRate.gstPercentage) / 100;
@@ -66,6 +87,8 @@ export function calculatePrice(
   return {
     goldCost: Math.round(goldCost * 100) / 100,
     makingCharges: Math.round(makingCharges * 100) / 100,
+    stoneCharges: Math.round(stoneCharges * 100) / 100,
+    stoneName: stoneProperties?.stoneName,
     subtotal: Math.round(subtotal * 100) / 100,
     gstAmount: Math.round(gstAmount * 100) / 100,
     finalPrice: Math.round(finalPrice * 100) / 100,
@@ -103,6 +126,16 @@ export function getDisplayPrice(
     return null;
   }
 
-  const priceBreakdown = calculatePrice(product.weightInGrams, metalRate);
-  return priceBreakdown.finalPrice;
+  const priceBreakdown = calculatePrice(
+    product.weightInGrams, 
+    metalRate, 
+    product.makingChargesPercentage,
+    {
+      hasStone: product.hasStone,
+      stoneName: product.stoneName,
+      stoneWeight: product.stoneWeight,
+      stoneValue: product.stoneValue,
+    }
+  );
+  return priceBreakdown.subtotal;
 }

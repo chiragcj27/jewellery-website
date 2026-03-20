@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { toast } from "react-hot-toast";
 
 export interface CartItem {
   id: string;
@@ -15,6 +16,13 @@ export interface CartItem {
   metalType?: string;
   /** Wholesaler: wastage percentage e.g. 8 */
   wastagePercentage?: number;
+  makingChargesPercentage?: number;
+  hasStone?: boolean;
+  stoneName?: string;
+  stoneWeight?: number;
+  stoneValue?: number;
+  selectedMetalColor?: string;
+  selectedSizeLength?: string;
 }
 
 interface CartStore {
@@ -48,6 +56,7 @@ export const useCartStore = create<CartStore>()(
             items: [...state.items, { ...item, quantity: 1 }],
           }));
         }
+        toast.success(`${item.title} added to bag!`);
       },
       
       removeItem: (id) => {

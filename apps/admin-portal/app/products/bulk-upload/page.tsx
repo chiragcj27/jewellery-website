@@ -219,6 +219,16 @@ export default function BulkUploadPage() {
               </div>
 
               <div>
+                <p className="text-sm font-semibold text-blue-900 mb-1">Stone Configuration (Optional):</p>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li><span className="font-mono bg-white px-1">hasStone</span> - Set to true if product contains stone(s)</li>
+                  <li><span className="font-mono bg-white px-1">stoneName</span> - Name of the stone e.g. Diamond, Ruby, Emerald</li>
+                  <li><span className="font-mono bg-white px-1">stoneWeight</span> - Stone weight in carats (required if hasStone is true)</li>
+                  <li><span className="font-mono bg-white px-1">stoneValue</span> - Stone value per carat in currency (required if hasStone is true)</li>
+                </ul>
+              </div>
+
+              <div>
                 <p className="text-sm font-semibold text-blue-900 mb-1">Optional Columns:</p>
                 <ul className="text-sm text-blue-800 space-y-1">
                   <li><span className="font-mono bg-white px-1">description</span> - Product description</li>

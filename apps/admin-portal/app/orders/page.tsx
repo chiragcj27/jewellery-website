@@ -17,7 +17,10 @@ interface OrderItem {
   weightInGrams?: number;
   metalType?: string;
   wastagePercentage?: number;
+  makingChargesPercentage?: number;
   linePrice: number;
+  selectedMetalColor?: string;
+  selectedSizeLength?: string;
 }
 
 interface Order {
@@ -270,7 +273,26 @@ export default function OrdersPage() {
                                 {item.wastagePercentage != null && order.wastageIncluded && (
                                   <span> • Wastage: {item.wastagePercentage}%</span>
                                 )}
+                                {item.makingChargesPercentage != null && (
+                                  <span> • Making Charges: {item.makingChargesPercentage}%</span>
+                                )}
                               </p>
+                            )}
+                            
+                            {/* Display Customizations */}
+                            {(item.selectedMetalColor || item.selectedSizeLength) && (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {item.selectedMetalColor && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                                    Metal: {item.selectedMetalColor}
+                                  </span>
+                                )}
+                                {item.selectedSizeLength && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                    Size: {item.selectedSizeLength}
+                                  </span>
+                                )}
+                              </div>
                             )}
                           </div>
                           <div className="text-right shrink-0">

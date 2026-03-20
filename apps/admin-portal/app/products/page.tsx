@@ -43,7 +43,12 @@ interface Product {
   displayOrder: number;
   weightInGrams?: number;
   metalType?: string;
+  makingChargesPercentage?: number;
   useDynamicPricing: boolean;
+  hasStone: boolean;
+  stoneName?: string;
+  stoneWeight?: number;
+  stoneValue?: number;
   filterValues: Record<string, string | string[]>;
 }
 
@@ -82,7 +87,12 @@ export default function ProductsPage() {
     filterValues: {} as Record<string, string | string[]>,
     weightInGrams: '',
     metalType: '',
+    makingChargesPercentage: '',
     useDynamicPricing: false,
+    hasStone: false,
+    stoneName: '',
+    stoneWeight: '',
+    stoneValue: '',
   });
   const [imagesUploading, setImagesUploading] = useState(false);
   const [imagesError, setImagesError] = useState<string | null>(null);
@@ -201,7 +211,12 @@ export default function ProductsPage() {
         filterValues: formData.filterValues,
         weightInGrams: formData.weightInGrams ? parseFloat(formData.weightInGrams) : undefined,
         metalType: formData.metalType || undefined,
+        makingChargesPercentage: formData.makingChargesPercentage ? parseFloat(formData.makingChargesPercentage) : undefined,
         useDynamicPricing: formData.useDynamicPricing,
+        hasStone: formData.hasStone,
+        stoneName: formData.hasStone && formData.stoneName ? formData.stoneName : undefined,
+        stoneWeight: formData.hasStone && formData.stoneWeight ? parseFloat(formData.stoneWeight) : undefined,
+        stoneValue: formData.hasStone && formData.stoneValue ? parseFloat(formData.stoneValue) : undefined,
       };
 
       const result = editingProduct
@@ -247,7 +262,12 @@ export default function ProductsPage() {
       filterValues: (product as Product).filterValues || {},
       weightInGrams: product.weightInGrams?.toString() || '',
       metalType: product.metalType || '',
+      makingChargesPercentage: product.makingChargesPercentage?.toString() || '',
       useDynamicPricing: product.useDynamicPricing || false,
+      hasStone: product.hasStone || false,
+      stoneName: product.stoneName || '',
+      stoneWeight: product.stoneWeight?.toString() || '',
+      stoneValue: product.stoneValue?.toString() || '',
     });
     setImagesError(null);
     setShowForm(true);
@@ -291,7 +311,12 @@ export default function ProductsPage() {
       filterValues: {},
       weightInGrams: '',
       metalType: '',
+      makingChargesPercentage: '',
       useDynamicPricing: false,
+      hasStone: false,
+      stoneName: '',
+      stoneWeight: '',
+      stoneValue: '',
     });
     setEditingProduct(null);
     setShowForm(false);
@@ -573,6 +598,19 @@ export default function ProductsPage() {
                           ))}
                         </select>
                       </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Making Charges % (Override)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={formData.makingChargesPercentage}
+                          onChange={(e) => setFormData({ ...formData, makingChargesPercentage: e.target.value })}
+                          placeholder="e.g. 15"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
                       <div className="md:col-span-2">
                         <p className="text-xs text-blue-700">
                           Price: Gold value + (Gold value × Making %) + GST. Gold value = Weight × (Rate per 10g ÷ 10)
@@ -621,6 +659,84 @@ export default function ProductsPage() {
                           onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Stone Configuration */}
+              <div className="border-t border-b border-gray-200 py-4 my-4">
+                <h3 className="text-lg font-medium text-gray-900 mb-3">Stone Details</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.hasStone}
+                        onChange={(e) => {
+                          const isChecked = e.target.checked;
+                          setFormData({
+                            ...formData,
+                            hasStone: isChecked,
+                            ...(isChecked ? {} : { stoneName: '', stoneWeight: '', stoneValue: '' })
+                          });
+                        }}
+                        className="mr-2"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        Product contains stone(s)
+                      </span>
+                    </label>
+                  </div>
+
+                  {formData.hasStone && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-purple-50 border border-purple-200 rounded-md p-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Stone Name
+                        </label>
+                        <input
+                          type="text"
+                          required={formData.hasStone}
+                          value={formData.stoneName}
+                          onChange={(e) => setFormData({ ...formData, stoneName: e.target.value })}
+                          placeholder="e.g. Diamond, Ruby, Emerald"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Stone Weight (Carats)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          required={formData.hasStone}
+                          value={formData.stoneWeight}
+                          onChange={(e) => setFormData({ ...formData, stoneWeight: e.target.value })}
+                          placeholder="e.g. 0.5"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Stone Value (₹ per carat)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          required={formData.hasStone}
+                          value={formData.stoneValue}
+                          onChange={(e) => setFormData({ ...formData, stoneValue: e.target.value })}
+                          placeholder="e.g. 50000"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div className="md:col-span-3">
+                        <p className="text-xs text-purple-700">
+                          If dynamic pricing is used, the stone value (weight × value per carat) will be added to the final calculated price along with GST.
+                        </p>
                       </div>
                     </div>
                   )}

@@ -32,6 +32,11 @@ interface ExcelRow {
   metalType?: string; // e.g., "22KT", "18KT", "20KT"
   wastagePercentage?: number | string; // e.g. 8 = 8% wastage (for wholesaler display & calculation)
   useDynamicPricing?: boolean | string; // Use weight-based pricing
+  makingChargesPercentage?: number | string; // Product-specific making charges
+  hasStone?: boolean | string; // Product contains stone(s)
+  stoneName?: string; // Stone name e.g. "Diamond", "Ruby"
+  stoneWeight?: number | string; // Stone weight in carats
+  stoneValue?: number | string; // Stone value per carat in currency
 }
 
 interface ValidationError {
@@ -236,6 +241,39 @@ async function validateRow(
       message: 'Wastage percentage must be >= 0',
       value: row.wastagePercentage,
     });
+  }
+
+  const makingChargesPercentage = parseNumber(row.makingChargesPercentage);
+  if (makingChargesPercentage !== undefined && makingChargesPercentage < 0) {
+    errors.push({
+      row: rowIndex,
+      field: 'makingChargesPercentage',
+      message: 'Making charges percentage must be >= 0',
+      value: row.makingChargesPercentage,
+    });
+  }
+
+  const hasStone = parseBoolean(row.hasStone);
+  if (hasStone) {
+    const stoneWeight = parseNumber(row.stoneWeight);
+    if (stoneWeight === undefined || stoneWeight <= 0) {
+      errors.push({
+        row: rowIndex,
+        field: 'stoneWeight',
+        message: 'Valid stone weight (> 0) is required when hasStone is true',
+        value: row.stoneWeight,
+      });
+    }
+
+    const stoneValue = parseNumber(row.stoneValue);
+    if (stoneValue === undefined || stoneValue < 0) {
+      errors.push({
+        row: rowIndex,
+        field: 'stoneValue',
+        message: 'Valid stone value (>= 0) is required when hasStone is true',
+        value: row.stoneValue,
+      });
+    }
   }
 
   return errors;
@@ -477,7 +515,12 @@ export async function bulkUpload(req: Request, res: Response): Promise<void> {
           weightInGrams: parseNumber(row.weightInGrams),
           metalType: row.metalType ? String(row.metalType).trim() : undefined,
           wastagePercentage: parseNumber(row.wastagePercentage),
+          makingChargesPercentage: parseNumber(row.makingChargesPercentage),
           useDynamicPricing: row.useDynamicPricing !== undefined ? parseBoolean(row.useDynamicPricing) : false,
+          hasStone: row.hasStone !== undefined ? parseBoolean(row.hasStone) : false,
+          stoneName: row.stoneName ? String(row.stoneName).trim() : undefined,
+          stoneWeight: parseNumber(row.stoneWeight),
+          stoneValue: parseNumber(row.stoneValue),
         };
 
         const existing = await Product.findOne({
@@ -568,7 +611,37 @@ export async function downloadTemplate(_req: Request, res: Response): Promise<vo
         weightInGrams: 5.5,
         metalType: '22KT',
         wastagePercentage: 8,
+        makingChargesPercentage: 15,
         useDynamicPricing: false,
+        hasStone: true,
+        stoneName: 'Diamond',
+        stoneWeight: 0.5,
+        stoneValue: 50000,
+      },
+      {
+        name: 'Gold Chain (No Diamond)',
+        sku: 'PROD-002',
+        category: categories.length > 0 ? categories[0].name : 'Chains',
+        subcategory: subcategories.length > 0 ? (subcategories[0] as any).name : 'Gold Chains',
+        description: 'Plain gold chain',
+        sizeLength: '18 inches',
+        price: 45000,
+        compareAtPrice: 50000,
+        stock: 5,
+        isActive: true,
+        isFeatured: false,
+        displayOrder: 1,
+        images: '',
+        filterValues: '{"material":"Gold","color":"Yellow"}',
+        weightInGrams: 10,
+        metalType: '22KT',
+        wastagePercentage: 8,
+        makingChargesPercentage: 15,
+        useDynamicPricing: true,
+        hasStone: false,
+        stoneName: '',
+        stoneWeight: '',
+        stoneValue: '',
       },
     ];
 
@@ -619,7 +692,12 @@ export async function downloadTemplate(_req: Request, res: Response): Promise<vo
       { Instruction: '8. Boolean fields accept: true/false, yes/no, 1/0' },
       { Instruction: '9. Metal types: 22KT, 18KT, 20KT, 24KT, Silver, Platinum, etc.' },
       { Instruction: '10. wastagePercentage: Optional percentage for wastage (e.g., 8 = 8%)' },
-      { Instruction: '11. Upload just the Excel file, or a ZIP containing Excel + image files' },
+      { Instruction: '11. makingChargesPercentage: Optional making charges % override for this specific product' },
+      { Instruction: '12. hasStone: Boolean (true/false) indicating if product contains stone(s)' },
+      { Instruction: '13. stoneName: Name of the stone e.g. "Diamond", "Ruby", "Emerald"' },
+      { Instruction: '14. stoneWeight: Required if hasStone=true. Stone weight in carats (e.g., 0.5)' },
+      { Instruction: '15. stoneValue: Required if hasStone=true. Stone value per carat in currency (e.g., 50000)' },
+      { Instruction: '15. Upload just the Excel file, or a ZIP containing Excel + image files' },
     ];
     const instructionsSheet = XLSX.utils.json_to_sheet(instructions);
     XLSX.utils.book_append_sheet(workbook, instructionsSheet, 'Instructions');

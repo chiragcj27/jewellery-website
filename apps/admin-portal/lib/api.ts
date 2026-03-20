@@ -64,6 +64,8 @@ export interface SiteSettingsData {
   preHeaderText?: string;
   preHeaderLink?: string;
   whatsappEnquiryNumber?: string;
+  discountPercentage?: number;
+  discountReason?: string;
 }
 
 export interface BannerData {

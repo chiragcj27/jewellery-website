@@ -18,6 +18,7 @@ export interface MetalRateData {
 export interface PriceCalculationInput {
   weightInGrams: number;
   metalRate: MetalRateData;
+  customMakingChargesPercentage?: number;
 }
 
 export interface PriceBreakdown {
@@ -37,8 +38,9 @@ export function calculatePrice(input: PriceCalculationInput): PriceBreakdown {
   // Gold value = weight × (rate per 10g ÷ 10)
   const goldCost = (metalRate.ratePerTenGrams / 10) * weightInGrams;
 
-  // Making charges = gold value × making charges %
-  const makingCharges = goldCost * (metalRate.makingChargesPercentage / 100);
+  // Making charges = gold value × making charges % (fallback to global metal rate if product specific is not provided)
+  const makingChargesPercent = input.customMakingChargesPercentage ?? metalRate.makingChargesPercentage;
+  const makingCharges = goldCost * (makingChargesPercent / 100);
 
   // Subtotal = gold value + making charges
   const subtotal = goldCost + makingCharges;

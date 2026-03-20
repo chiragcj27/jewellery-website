@@ -9,8 +9,8 @@ import { useWishlistStore } from "@/store/wishlistStore";
 import { useAuth } from "@/context/AuthProvider";
 
 import { api } from "@/lib/api";
-import { getDisplayPrice, formatPrice } from "@/lib/priceCalculator";
-import type { MetalRateData } from "@/lib/priceCalculator";
+import { getDisplayPrice, formatPrice, calculatePrice } from "@/lib/priceCalculator";
+import type { MetalRateData, PriceBreakdown } from "@/lib/priceCalculator";
 
 interface ApiProduct {
   _id: string;
@@ -28,6 +28,11 @@ interface ApiProduct {
   weightInGrams?: number;
   metalType?: string;
   wastagePercentage?: number;
+  makingChargesPercentage?: number;
+  hasStone?: boolean;
+  stoneName?: string;
+  stoneWeight?: number;
+  stoneValue?: number;
   metadata?: Record<string, unknown>;
 }
 
@@ -64,8 +69,15 @@ export default function ProductPageBySku() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [isSpecificationOpen, setIsSpecificationOpen] = useState(false);
+  const [isPriceBreakupOpen, setIsPriceBreakupOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [discountPercentage, setDiscountPercentage] = useState(0);
+  const [discountReason, setDiscountReason] = useState('');
+
+  // Customization fields
+  const [selectedMetalColor, setSelectedMetalColor] = useState<string>("");
+  const [selectedSizeLength, setSelectedSizeLength] = useState<string>("");
 
   const addItem = useCartStore((state) => state.addItem);
   const clearCart = useCartStore((state) => state.clearCart);
@@ -84,9 +96,10 @@ export default function ProductPageBySku() {
       setLoading(true);
       setNotFound(false);
       try {
-        const [productRes, metalRes] = await Promise.all([
+        const [productRes, metalRes, settingsRes] = await Promise.all([
           api.products.getBySku(sku),
           api.metalRates.getAll(true) as Promise<{ success?: boolean; data?: MetalRateData[] }>,
+          api.siteSettings.get(),
         ]);
         if (cancelled) return;
         if (productRes.success && productRes.data) {
@@ -96,6 +109,10 @@ export default function ProductPageBySku() {
         }
         if (metalRes.success && Array.isArray(metalRes.data)) {
           setMetalRates(metalRes.data);
+        }
+        if (settingsRes && !settingsRes.error) {
+          setDiscountPercentage(settingsRes.discountPercentage ?? 0);
+          setDiscountReason(settingsRes.discountReason ?? '');
         }
       } catch {
         if (!cancelled) setNotFound(true);
@@ -133,14 +150,21 @@ export default function ProductPageBySku() {
       useDynamicPricing: product.useDynamicPricing ?? false,
       weightInGrams: product.weightInGrams,
       metalType: product.metalType,
+      makingChargesPercentage: product.makingChargesPercentage,
+      hasStone: product.hasStone,
+      stoneName: product.stoneName,
+      stoneWeight: product.stoneWeight,
+      stoneValue: product.stoneValue,
     },
     metalRates
   );
-  const priceToShow = displayPrice ?? product.price ?? 0;
+  const rawPrice = displayPrice ?? product.price ?? 0;
+  const discountAmt = discountPercentage > 0 ? Math.round(rawPrice * discountPercentage / 100 * 100) / 100 : 0;
+  const priceToShow = Math.round((rawPrice - discountAmt) * 100) / 100;
   const compareAt = product.compareAtPrice ?? undefined;
   const savings = calculateDiscount(priceToShow, compareAt);
   const currentPriceStr = formatPrice(priceToShow);
-  const mrpStr = compareAt != null ? formatPrice(compareAt) : null;
+  const mrpStr = compareAt != null ? formatPrice(compareAt) : (discountPercentage > 0 ? formatPrice(rawPrice) : null);
 
   const showWholesalerView =
     isWholesaler && (product.metalType != null || product.weightInGrams != null);
@@ -170,27 +194,40 @@ export default function ProductPageBySku() {
   };
 
   const handleAddToCart = () => {
-    const productSku = product.sku ?? product._id;
+    // Generate an ID that includes customizations to treat different options as separate items
+    const baseSku = product.sku ?? product._id;
+    const customKey = `${selectedMetalColor || 'default'}-${selectedSizeLength || 'default'}`;
+    const cartItemId = `${baseSku}-${customKey}`;
+
     if (showWholesalerView && product.weightInGrams != null && product.metalType) {
       addItem({
-        id: productSku,
+        id: cartItemId,
         title: product.name,
         image: product.images?.[0] ?? "",
         price: 0,
         mrp: 0,
-        sku: productSku,
+        sku: baseSku,
         weightInGrams: product.weightInGrams,
         metalType: product.metalType,
         wastagePercentage: product.wastagePercentage,
+        makingChargesPercentage: product.makingChargesPercentage,
+        hasStone: product.hasStone,
+        stoneName: product.stoneName,
+        stoneWeight: product.stoneWeight,
+        stoneValue: product.stoneValue,
+        selectedMetalColor: selectedMetalColor || undefined,
+        selectedSizeLength: selectedSizeLength || undefined,
       });
     } else {
       addItem({
-        id: productSku,
+        id: cartItemId,
         title: product.name,
         image: product.images?.[0] ?? "",
         price: priceToShow,
         mrp: compareAt ?? priceToShow,
-        sku: productSku,
+        sku: baseSku,
+        selectedMetalColor: selectedMetalColor || undefined,
+        selectedSizeLength: selectedSizeLength || undefined,
       });
     }
   };
@@ -331,6 +368,41 @@ export default function ProductPageBySku() {
               <span className="text-sm font-medium text-black">In stock – ready to ship</span>
             </div>
 
+            {/* Customizations Section */}
+            <div className="space-y-4 pt-4 border-t border-gray-100">
+              <div className="space-y-2">
+                <label htmlFor="metal-color" className="block text-sm font-medium text-gray-700">
+                  Select Metal Color
+                </label>
+                <select
+                  id="metal-color"
+                  value={selectedMetalColor}
+                  onChange={(e) => setSelectedMetalColor(e.target.value)}
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md border"
+                >
+                  <option value="">Choose a color...</option>
+                  <option value="Yellow Gold">Yellow Gold</option>
+                  <option value="White Gold">White Gold</option>
+                  <option value="Rose Gold">Rose Gold</option>
+                  <option value="Silver">Silver</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="size-length" className="block text-sm font-medium text-gray-700">
+                  Size / Length
+                </label>
+                <input
+                  type="text"
+                  id="size-length"
+                  value={selectedSizeLength}
+                  onChange={(e) => setSelectedSizeLength(e.target.value)}
+                  placeholder="e.g. 7 inches, 18 cm, Size 6"
+                  className="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm"
+                />
+              </div>
+            </div>
+
             <div className="space-y-3">
               <div className="flex gap-3">
                 <button
@@ -374,6 +446,18 @@ export default function ProductPageBySku() {
               >
                 BUY IT NOW
               </button>
+            </div>
+
+            {/* Weight disclaimer */}
+            <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-600 shrink-0 mt-0.5">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="16" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12.01" y2="8" />
+              </svg>
+              <p className="text-xs text-amber-800">
+                Weight may slightly change after final product manufacturing. Final invoice value may vary accordingly.
+              </p>
             </div>
 
             <div className="space-y-2 border-t border-gray-200 pt-4">
@@ -422,6 +506,110 @@ export default function ProductPageBySku() {
                     )}
                   </dl>
                 </div>
+              )}
+              {product.useDynamicPricing && product.weightInGrams != null && product.metalType && metalRates.length > 0 && (
+                <>
+                  <button
+                    onClick={() => setIsPriceBreakupOpen(!isPriceBreakupOpen)}
+                    className="w-full flex items-center justify-between py-3 px-4 bg-gray-100 hover:bg-gray-200 transition-colors"
+                  >
+                    <span className="font-medium text-black">Price Breakup</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`transition-transform duration-200 ${isPriceBreakupOpen ? "rotate-180" : ""}`}>
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </button>
+                  {isPriceBreakupOpen && (() => {
+                    const rate = metalRates.find(r => r.metalType === product.metalType);
+                    if (!rate) return null;
+                    const breakdown = calculatePrice(product.weightInGrams, rate, product.makingChargesPercentage, {
+                      hasStone: product.hasStone,
+                      stoneName: product.stoneName,
+                      stoneWeight: product.stoneWeight,
+                      stoneValue: product.stoneValue
+                    });
+                    const breakdownDiscountAmt = discountPercentage > 0
+                      ? Math.round(breakdown.subtotal * discountPercentage / 100 * 100) / 100
+                      : 0;
+                    const discountedSubtotal = breakdown.subtotal - breakdownDiscountAmt;
+                    const discountedGst = Math.round(discountedSubtotal * rate.gstPercentage / 100 * 100) / 100;
+                    const grandTotal = Math.round((discountedSubtotal + discountedGst) * 100) / 100;
+                    const ratePerGram = rate.ratePerTenGrams / 10;
+                    const makingPercent = product.makingChargesPercentage ?? rate.makingChargesPercentage;
+
+                    return (
+                      <div className="bg-gray-50 border-x border-b border-gray-200">
+                        {/* Gold Section */}
+                        <div className="px-5 pt-5 pb-4">
+                          <h4 className="text-sm font-bold text-black uppercase tracking-wide mb-4">
+                            {product.metalType}
+                          </h4>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <p className="text-base sm:text-lg font-bold text-black">{formatPrice(ratePerGram)}</p>
+                              <p className="text-xs text-gray-500 mt-0.5">Rate / g</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-base sm:text-lg font-bold text-black">{product.weightInGrams} g</p>
+                              <p className="text-xs text-gray-500 mt-0.5">Weight</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-base sm:text-lg font-bold text-black">{formatPrice(breakdown.goldCost)}</p>
+                              <p className="text-xs text-gray-500 mt-0.5">Final Value</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Stone Section */}
+                        {product.hasStone && breakdown.stoneCharges > 0 && (
+                          <div className="px-5 pt-4 pb-4 border-t border-gray-200">
+                            <h4 className="text-sm font-bold text-black uppercase tracking-wide mb-4">
+                              {breakdown.stoneName || 'Stone'}
+                            </h4>
+                            <div className="grid grid-cols-3 gap-2">
+                              <div>
+                                <p className="text-base sm:text-lg font-bold text-black">{product.stoneWeight} ct</p>
+                                <p className="text-xs text-gray-500 mt-0.5">Weight</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-base sm:text-lg font-bold text-black">{formatPrice(product.stoneValue ?? 0)}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">Rate / ct</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-base sm:text-lg font-bold text-black">{formatPrice(breakdown.stoneCharges)}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">Final Value</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Summary Rows */}
+                        <div className="border-t border-gray-200">
+                          <div className="flex justify-between items-center px-5 py-3 text-sm">
+                            <span className="text-gray-700 font-medium">Making Charges ({makingPercent}%)</span>
+                            <span className="font-bold text-black">{formatPrice(breakdown.makingCharges)}</span>
+                          </div>
+
+                          {discountPercentage > 0 && (
+                            <div className="flex justify-between items-center px-5 py-3 border-t border-gray-100 text-sm">
+                              <span className="text-green-600 font-medium">{discountReason ? `${discountReason} Discount` : 'Discount'} ({discountPercentage}%)</span>
+                              <span className="font-bold text-green-600">- {formatPrice(breakdownDiscountAmt)}</span>
+                            </div>
+                          )}
+
+                          <div className="flex justify-between items-center px-5 py-3 border-t border-gray-100 text-sm">
+                            <span className="text-gray-700 font-medium">GST ({rate.gstPercentage}%)</span>
+                            <span className="font-bold text-black">{formatPrice(discountedGst)}</span>
+                          </div>
+
+                          <div className="flex justify-between items-center px-5 py-3.5 border-t-2 border-gray-300 bg-gray-100">
+                            <span className="text-black font-bold text-base">Grand Total</span>
+                            <span className="text-black font-bold text-lg">{formatPrice(grandTotal)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </>
               )}
             </div>
           </div>

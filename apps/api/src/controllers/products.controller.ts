@@ -117,6 +117,10 @@ export async function create(req: Request, res: Response): Promise<void> {
       metalType,
       wastagePercentage,
       useDynamicPricing,
+      hasStone,
+      stoneName,
+      stoneWeight,
+      stoneValue,
     } = req.body;
 
     if (!name || !category || !subcategory) {
@@ -194,6 +198,10 @@ export async function create(req: Request, res: Response): Promise<void> {
       metalType: metalType || undefined,
       wastagePercentage: wastagePercentage !== undefined ? wastagePercentage : undefined,
       useDynamicPricing: useDynamicPricing || false,
+      hasStone: hasStone !== undefined ? hasStone : false,
+      stoneName: stoneName || undefined,
+      stoneWeight: stoneWeight !== undefined ? stoneWeight : undefined,
+      stoneValue: stoneValue !== undefined ? stoneValue : undefined,
     });
 
     await product.save();
@@ -265,6 +273,10 @@ export async function update(req: Request, res: Response): Promise<void> {
       metalType,
       wastagePercentage,
       useDynamicPricing,
+      hasStone,
+      stoneName,
+      stoneWeight,
+      stoneValue,
     } = req.body;
 
     const updateData: Record<string, unknown> = {};
@@ -325,6 +337,10 @@ export async function update(req: Request, res: Response): Promise<void> {
     if (metalType !== undefined) updateData.metalType = metalType;
     if (wastagePercentage !== undefined) updateData.wastagePercentage = wastagePercentage;
     if (useDynamicPricing !== undefined) updateData.useDynamicPricing = useDynamicPricing;
+    if (hasStone !== undefined) updateData.hasStone = hasStone;
+    if (stoneName !== undefined) updateData.stoneName = stoneName;
+    if (stoneWeight !== undefined) updateData.stoneWeight = stoneWeight;
+    if (stoneValue !== undefined) updateData.stoneValue = stoneValue;
 
     const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
       new: true,

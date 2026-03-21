@@ -3,22 +3,11 @@
 import { useMemo, useState } from "react";
 import ProductCard from "./product-card";
 
-type CategoryFilter =
-  | "ALL"
-  | "NECKLACES"
-  | "BRACELETS"
-  | "EARRINGS"
-  | "RINGS"
-  | "MENS"
-  | "MANGALSUTRA";
-
-type ProductCategory =
-  | "NECKLACES"
-  | "BRACELETS"
-  | "EARRINGS"
-  | "RINGS"
-  | "MENS"
-  | "MANGALSUTRA";
+interface CategoryItem {
+  _id: string;
+  name: string;
+  slug: string;
+}
 
 interface Product {
   id: string;
@@ -27,18 +16,8 @@ interface Product {
   currentPrice: string;
   originalPrice: string;
   discountLabel: string;
-  category: ProductCategory;
+  category: string; // category name (uppercase)
 }
-
-const FILTERS: { label: string; value: CategoryFilter }[] = [
-  { label: "All", value: "ALL" },
-  { label: "Necklaces", value: "NECKLACES" },
-  { label: "Bracelets", value: "BRACELETS" },
-  { label: "Earrings", value: "EARRINGS" },
-  { label: "Rings", value: "RINGS" },
-  { label: "Mens", value: "MENS" },
-  { label: "Mangalsutra", value: "MANGALSUTRA" },
-];
 
 const PRODUCTS: Product[] = [
   {
@@ -123,12 +102,27 @@ const PRODUCTS: Product[] = [
   },
 ];
 
-export default function TopStylesSection() {
-  const [activeFilter, setActiveFilter] = useState<CategoryFilter>("ALL");
+interface TopStylesSectionProps {
+  categories?: CategoryItem[];
+}
+
+export default function TopStylesSection({ categories = [] }: TopStylesSectionProps) {
+  const [activeFilter, setActiveFilter] = useState<string>("ALL");
+
+  // Build filter tabs dynamically from backend categories, with "All" first
+  const filters = useMemo(() => {
+    const dynamicFilters = categories.map((cat) => ({
+      label: cat.name,
+      value: cat.name.toUpperCase(),
+    }));
+    return [{ label: "All", value: "ALL" }, ...dynamicFilters];
+  }, [categories]);
 
   const visibleProducts = useMemo(() => {
     if (activeFilter === "ALL") return PRODUCTS;
-    return PRODUCTS.filter((p) => p.category === activeFilter);
+    return PRODUCTS.filter(
+      (p) => p.category.toUpperCase() === activeFilter.toUpperCase()
+    );
   }, [activeFilter]);
 
   return (
@@ -137,7 +131,7 @@ export default function TopStylesSection() {
         <div className="flex flex-col gap-6">
           {/* Filter buttons row */}
           <div className="flex flex-wrap gap-2 sm:gap-3 justify-center px-2">
-            {FILTERS.map((filter) => {
+            {filters.map((filter) => {
               const isActive = filter.value === activeFilter;
               return (
                 <button
@@ -185,4 +179,3 @@ export default function TopStylesSection() {
     </section>
   );
 }
-

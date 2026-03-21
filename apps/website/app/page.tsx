@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Banner from "@/components/banner";
 import CategoryCarousel from "@/components/category-carousel";
 import TopStylesSection from "@/components/top-styles-section";
@@ -6,40 +9,24 @@ import FeaturedBanner from "@/components/featured-banner";
 import ImageCaraousel from "@/components/image-caraousel";
 import ProductCard from "@/components/product-card";
 import ShopWithConfidence from "@/components/shop-with-confidence";
+import { api } from "@/lib/api";
 
+interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  image?: string;
+  cardImage?: string;
+  cardImageHover?: string;
+  isActive: boolean;
+  displayOrder: number;
+}
 
-const CATEGORIES = [
-  {
-    label: "Earrings",
-    image: "https://palmonas.com/cdn/shop/files/Earring_2a1896c7-47a1-4ea7-b4d0-14e87b202414.jpg?v=1769329612&width=400",
-    hoverImage: "https://images.unsplash.com/photo-1596944920636-eb8c9d340626?w=600",
-  },
-  {
-    label: "Necklaces",
-    image: "https://palmonas.com/cdn/shop/files/neck.jpg?v=1769329612&width=400",
-    hoverImage: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600",
-  },
-  {
-    label: "Bracelets",
-    image: "https://palmonas.com/cdn/shop/articles/6_c277cb7d-3677-4f25-bc9f-9177e8a14f75.jpg?v=1769578341&width=400",
-    hoverImage: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600",
-  },
-  {
-    label: "Mangalsutras",
-    image: "https://palmonas.com/cdn/shop/files/Mamgalsutras.jpg?v=1769329611&width=200",
-    hoverImage: "https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=600",
-  },
-  {
-    label: "Mens",
-    image: "https://palmonas.com/cdn/shop/products/1_182adae1-9887-4e14-9203-abf43125dfd4.jpg?v=1744527319",
-    hoverImage: "https://palmonas.com/cdn/shop/files/22_9843e52f-ad2c-44c1-8699-ec1f93f909a5.jpg?v=1744524795",
-  },
-  {
-    label: "Rings",
-    image: "https://palmonas.com/cdn/shop/files/Rings_1_30735f1c-61f6-4e90-bb25-4c6fc50e8c4e.jpg?v=1769329611&width=400",
-    hoverImage: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600",
-  },
-] as const;
+/** Generate a SVG data-URI placeholder with the category name as text */
+function categoryPlaceholder(name: string): string {
+  const encoded = encodeURIComponent(name);
+  return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='533'%3E%3Crect fill='%23e5e5e5' width='400' height='533'/%3E%3Ctext fill='%23737373' font-family='sans-serif' font-size='28' font-weight='600' text-anchor='middle' dominant-baseline='middle' x='200' y='266'%3E${encoded}%3C/text%3E%3C/svg%3E`;
+}
 
 const SAMPLE_PRODUCTS = [
   {
@@ -96,7 +83,7 @@ const SAMPLE_PRODUCTS = [
     currentPrice: "₹1,499",
     originalPrice: "₹1,999",
     discountLabel: "25% OFF",
-    offerTag: "Editor’s Pick",
+    offerTag: "Editor's Pick",
   },
   {
     image:
@@ -110,6 +97,35 @@ const SAMPLE_PRODUCTS = [
 ] as const;
 
 export default function Home() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const result = await api.categories.getAll();
+        if (result.success && Array.isArray(result.data)) {
+          setCategories(
+            result.data.filter((cat: Category) => cat.isActive)
+          );
+        }
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Map API categories to the shape CategoryCarousel expects
+  const carouselCategories = categories.map((cat) => ({
+    label: cat.name,
+    image: cat.cardImage || categoryPlaceholder(cat.name),
+    hoverImage: cat.cardImageHover || undefined,
+    href: `/category/${cat.slug}`,
+  }));
+
   return (
     <div>
       <Banner />
@@ -123,6 +139,14 @@ export default function Home() {
 
         </Marquee>
       </div>
+       <section>
+        <div className="container mx-auto px-4 py-6 sm:py-8 md:py-10">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mt-6 sm:mt-8 md:mt-10 mb-3 sm:mb-4">
+            The Swarnorra Top Styles
+          </h2>
+        </div>
+      </section>
+      <TopStylesSection categories={categories} />
       <div className="container mx-auto px-4 py-6 sm:py-8 md:py-10">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-6 sm:mb-8 md:mb-10 mt-6 sm:mt-8 md:mt-10">Shop by category</h2>
       </div>
@@ -130,23 +154,18 @@ export default function Home() {
         className="w-full"
         aria-label="Shop by category"
       >
-        <CategoryCarousel
-          categories={CATEGORIES.map((cat) => ({
-            label: cat.label,
-            image: cat.image,
-            hoverImage: cat.hoverImage,
-            href: "#",
-          }))}
-        />
+        {loadingCategories ? (
+          <div className="flex justify-center py-12">
+            <div className="text-gray-500 text-sm">Loading categories...</div>
+          </div>
+        ) : carouselCategories.length > 0 ? (
+          <CategoryCarousel categories={carouselCategories} />
+        ) : (
+          <div className="flex justify-center py-12">
+            <div className="text-gray-400 text-sm">No categories available</div>
+          </div>
+        )}
       </section>
-      <section>
-        <div className="container mx-auto px-4 py-6 sm:py-8 md:py-10">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mt-6 sm:mt-8 md:mt-10 mb-3 sm:mb-4">
-            The Swarnorra Top Styles
-          </h2>
-        </div>
-      </section>
-      <TopStylesSection />
       <FeaturedBanner heading="" imageUrl="https://jewellery-website.s3.ap-south-1.amazonaws.com/assets/NEry58alFs3L4IYu.png" />
       <ImageCaraousel />
       <FeaturedBanner heading="Request your custom design" imageUrl="https://jewellery-website.s3.ap-south-1.amazonaws.com/assets/DrKF_ofE2aKQPEUi.png" />

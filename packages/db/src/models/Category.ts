@@ -12,6 +12,8 @@ export interface ICategory extends Document {
   slug: string;
   description?: string;
   image?: string;
+  cardImage?: string;
+  cardImageHover?: string;
   isActive: boolean;
   displayOrder: number;
   filters: IFilter[];
@@ -66,6 +68,12 @@ const CategorySchema: Schema = new Schema(
       trim: true,
     },
     image: {
+      type: String,
+    },
+    cardImage: {
+      type: String,
+    },
+    cardImageHover: {
       type: String,
     },
     isActive: {

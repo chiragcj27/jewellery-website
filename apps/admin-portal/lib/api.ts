@@ -14,6 +14,8 @@ export interface CategoryData {
   name: string;
   description?: string;
   image?: string;
+  cardImage?: string;
+  cardImageHover?: string;
   isActive?: boolean;
   displayOrder?: number;
   filters?: Filter[];

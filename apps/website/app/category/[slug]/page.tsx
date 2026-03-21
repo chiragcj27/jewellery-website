@@ -15,6 +15,8 @@ interface Category {
   slug: string;
   description?: string;
   image?: string;
+  cardImage?: string;
+  cardImageHover?: string;
   isActive: boolean;
   displayOrder: number;
   filters?: Array<{

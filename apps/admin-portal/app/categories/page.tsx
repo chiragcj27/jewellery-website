@@ -17,10 +17,14 @@ interface Category {
   slug: string;
   description?: string;
   image?: string;
+  cardImage?: string;
+  cardImageHover?: string;
   isActive: boolean;
   displayOrder: number;
   filters: Filter[];
 }
+
+type ImageField = 'image' | 'cardImage' | 'cardImageHover';
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -32,13 +36,33 @@ export default function CategoriesPage() {
     description: '',
     image: '',
     imageAssetId: '',
+    cardImage: '',
+    cardImageAssetId: '',
+    cardImageHover: '',
+    cardImageHoverAssetId: '',
     isActive: true,
     displayOrder: 0,
     filters: [] as Filter[],
   });
-  const [imageUploading, setImageUploading] = useState(false);
-  const [imageError, setImageError] = useState<string | null>(null);
+
+  const [uploadingField, setUploadingField] = useState<ImageField | null>(null);
+  const [imageErrors, setImageErrors] = useState<Partial<Record<ImageField, string>>>({});
+
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const cardImageInputRef = useRef<HTMLInputElement>(null);
+  const cardImageHoverInputRef = useRef<HTMLInputElement>(null);
+
+  const inputRefMap: Record<ImageField, React.RefObject<HTMLInputElement | null>> = {
+    image: imageInputRef,
+    cardImage: cardImageInputRef,
+    cardImageHover: cardImageHoverInputRef,
+  };
+
+  const assetIdKeyMap: Record<ImageField, 'imageAssetId' | 'cardImageAssetId' | 'cardImageHoverAssetId'> = {
+    image: 'imageAssetId',
+    cardImage: 'cardImageAssetId',
+    cardImageHover: 'cardImageHoverAssetId',
+  };
 
   useEffect(() => {
     fetchCategories();
@@ -65,6 +89,10 @@ export default function CategoriesPage() {
         description: formData.description,
         image: formData.image || undefined,
         imageAssetId: formData.imageAssetId || undefined,
+        cardImage: formData.cardImage || undefined,
+        cardImageAssetId: formData.cardImageAssetId || undefined,
+        cardImageHover: formData.cardImageHover || undefined,
+        cardImageHoverAssetId: formData.cardImageHoverAssetId || undefined,
         isActive: formData.isActive,
         displayOrder: formData.displayOrder,
         filters: formData.filters,
@@ -92,11 +120,15 @@ export default function CategoriesPage() {
       description: category.description || '',
       image: category.image || '',
       imageAssetId: '',
+      cardImage: category.cardImage || '',
+      cardImageAssetId: '',
+      cardImageHover: category.cardImageHover || '',
+      cardImageHoverAssetId: '',
       isActive: category.isActive,
       displayOrder: category.displayOrder,
       filters: category.filters || [],
     });
-    setImageError(null);
+    setImageErrors({});
     setShowForm(true);
   };
 
@@ -122,13 +154,17 @@ export default function CategoriesPage() {
       description: '',
       image: '',
       imageAssetId: '',
+      cardImage: '',
+      cardImageAssetId: '',
+      cardImageHover: '',
+      cardImageHoverAssetId: '',
       isActive: true,
       displayOrder: 0,
       filters: [],
     });
     setEditingCategory(null);
     setShowForm(false);
-    setImageError(null);
+    setImageErrors({});
   };
 
   const addFilter = () => {
@@ -174,32 +210,121 @@ export default function CategoriesPage() {
     setFormData({ ...formData, filters: newFilters });
   };
 
-  const handleImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageFile = async (field: ImageField, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!/^image\/(jpeg|png|gif|webp)$/i.test(file.type)) {
-      setImageError('Only JPEG, PNG, GIF, and WebP are allowed.');
+      setImageErrors((prev) => ({ ...prev, [field]: 'Only JPEG, PNG, GIF, and WebP are allowed.' }));
       return;
     }
-    setImageError(null);
-    setImageUploading(true);
+    setImageErrors((prev) => ({ ...prev, [field]: undefined }));
+    setUploadingField(field);
     try {
       const result = await api.assets.upload(file);
       if (result.success && result.data) {
-        setFormData({
-          ...formData,
-          image: result.data.url,
-          imageAssetId: result.data.assetId,
-        });
+        setFormData((prev) => ({
+          ...prev,
+          [field]: result.data.url,
+          [assetIdKeyMap[field]]: result.data.assetId,
+        }));
       } else {
-        setImageError(result.error || 'Upload failed');
+        setImageErrors((prev) => ({ ...prev, [field]: result.error || 'Upload failed' }));
       }
     } catch {
-      setImageError('Upload failed');
+      setImageErrors((prev) => ({ ...prev, [field]: 'Upload failed' }));
     } finally {
-      setImageUploading(false);
+      setUploadingField(null);
       e.target.value = '';
     }
+  };
+
+  const removeImage = (field: ImageField) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: '',
+      [assetIdKeyMap[field]]: '',
+    }));
+  };
+
+  /** Reusable image upload box */
+  const ImageUploadBox = ({ field, label }: { field: ImageField; label: string }) => {
+    const isUploading = uploadingField === field;
+    const currentUrl = formData[field];
+    const error = imageErrors[field];
+    const ref = inputRefMap[field];
+
+    return (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {label}
+        </label>
+        {/* Hidden file input */}
+        <input
+          ref={ref}
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          onChange={(e) => handleImageFile(field, e)}
+          disabled={isUploading}
+          className="hidden"
+        />
+        {/* Hover-to-upload image box */}
+        <div
+          onClick={() => !isUploading && ref.current?.click()}
+          className="group relative w-36 h-36 rounded-xl border-2 border-dashed border-gray-300 overflow-hidden cursor-pointer transition-all hover:border-blue-400 hover:shadow-md"
+          title={currentUrl ? 'Click to change image' : 'Click to upload image'}
+        >
+          {currentUrl ? (
+            <>
+              <img
+                src={currentUrl}
+                alt={label}
+                className="w-full h-full object-cover"
+              />
+              {/* Hover overlay on existing image */}
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-white text-xs font-medium">Change Image</span>
+              </div>
+            </>
+          ) : (
+            /* Empty state */
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-400 group-hover:text-blue-500 transition-colors bg-gray-50 group-hover:bg-blue-50">
+              {isUploading ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              )}
+              <span className="text-xs font-medium text-center px-2">
+                {isUploading ? 'Uploading…' : 'Click to upload'}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Status / error messages */}
+        {isUploading && (
+          <p className="mt-1.5 text-xs text-blue-600 font-medium">Uploading image…</p>
+        )}
+        {error && (
+          <p className="mt-1.5 text-xs text-red-600">{error}</p>
+        )}
+        {currentUrl && !isUploading && (
+          <button
+            type="button"
+            onClick={() => removeImage(field)}
+            className="mt-1.5 text-xs text-red-500 hover:text-red-700 font-medium"
+          >
+            Remove image
+          </button>
+        )}
+      </div>
+    );
   };
 
   if (loading) {
@@ -257,76 +382,14 @@ export default function CategoriesPage() {
                   rows={3}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category Image
-                </label>
-                {/* Hidden file input */}
-                <input
-                  ref={imageInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/gif,image/webp"
-                  onChange={handleImageFile}
-                  disabled={imageUploading}
-                  className="hidden"
-                />
-                {/* Hover-to-upload image box */}
-                <div
-                  onClick={() => !imageUploading && imageInputRef.current?.click()}
-                  className="group relative w-36 h-36 rounded-xl border-2 border-dashed border-gray-300 overflow-hidden cursor-pointer transition-all hover:border-blue-400 hover:shadow-md"
-                  title={formData.image ? 'Click to change image' : 'Click to upload image'}
-                >
-                  {formData.image ? (
-                    <>
-                      <img
-                        src={formData.image}
-                        alt="Category"
-                        className="w-full h-full object-cover"
-                      />
-                      {/* Hover overlay on existing image */}
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span className="text-white text-xs font-medium">Change Image</span>
-                      </div>
-                    </>
-                  ) : (
-                    /* Empty state */
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-400 group-hover:text-blue-500 transition-colors bg-gray-50 group-hover:bg-blue-50">
-                      {imageUploading ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      )}
-                      <span className="text-xs font-medium text-center px-2">
-                        {imageUploading ? 'Uploading…' : 'Click to upload'}
-                      </span>
-                    </div>
-                  )}
-                </div>
 
-                {/* Status / error messages */}
-                {imageUploading && (
-                  <p className="mt-1.5 text-xs text-blue-600 font-medium">Uploading image…</p>
-                )}
-                {imageError && (
-                  <p className="mt-1.5 text-xs text-red-600">{imageError}</p>
-                )}
-                {formData.image && !imageUploading && (
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, image: '', imageAssetId: '' })}
-                    className="mt-1.5 text-xs text-red-500 hover:text-red-700 font-medium"
-                  >
-                    Remove image
-                  </button>
-                )}
+              {/* Three image upload fields in a row */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <ImageUploadBox field="image" label="Category Page Banner" />
+                <ImageUploadBox field="cardImage" label="Card Image" />
+                <ImageUploadBox field="cardImageHover" label="Card Image (Hover)" />
               </div>
+
               <div className="flex gap-4">
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -47,20 +47,33 @@ export async function getBySlug(req: Request, res: Response): Promise<void> {
 
 export async function create(req: Request, res: Response): Promise<void> {
   const imageAssetId = req.body.imageAssetId as string | undefined;
+  const cardImageAssetId = req.body.cardImageAssetId as string | undefined;
+  const cardImageHoverAssetId = req.body.cardImageHoverAssetId as string | undefined;
   let imageUrl: string | undefined = req.body.image;
+  let cardImageUrl: string | undefined = req.body.cardImage;
+  let cardImageHoverUrl: string | undefined = req.body.cardImageHover;
+
+  await connectToDatabase();
 
   if (imageAssetId) {
-    await connectToDatabase();
     const asset = await Asset.findById(imageAssetId);
-    if (!asset) {
-      res.status(400).json({ success: false, error: 'Invalid imageAssetId' });
-      return;
-    }
+    if (!asset) { res.status(400).json({ success: false, error: 'Invalid imageAssetId' }); return; }
     imageUrl = asset.url;
   }
+  if (cardImageAssetId) {
+    const asset = await Asset.findById(cardImageAssetId);
+    if (!asset) { res.status(400).json({ success: false, error: 'Invalid cardImageAssetId' }); return; }
+    cardImageUrl = asset.url;
+  }
+  if (cardImageHoverAssetId) {
+    const asset = await Asset.findById(cardImageHoverAssetId);
+    if (!asset) { res.status(400).json({ success: false, error: 'Invalid cardImageHoverAssetId' }); return; }
+    cardImageHoverUrl = asset.url;
+  }
+
+  const allAssetIds = [imageAssetId, cardImageAssetId, cardImageHoverAssetId].filter(Boolean) as string[];
 
   try {
-    await connectToDatabase();
     const { name, description, isActive, displayOrder, filters } = req.body;
 
     if (!name) {
@@ -73,6 +86,8 @@ export async function create(req: Request, res: Response): Promise<void> {
       slug: slugify(name),
       description,
       image: imageUrl,
+      cardImage: cardImageUrl,
+      cardImageHover: cardImageHoverUrl,
       isActive: isActive !== undefined ? isActive : true,
       displayOrder: displayOrder || 0,
       filters: filters || [],
@@ -80,19 +95,14 @@ export async function create(req: Request, res: Response): Promise<void> {
 
     await category.save();
 
-    if (imageAssetId) {
-      await Asset.findByIdAndUpdate(imageAssetId, {
-        refType: 'Category',
-        refId: category._id,
-      });
+    for (const assetId of allAssetIds) {
+      await Asset.findByIdAndUpdate(assetId, { refType: 'Category', refId: category._id });
     }
 
     res.status(201).json({ success: true, data: category });
   } catch (error: unknown) {
-    if (imageAssetId) {
-      try {
-        await deleteAssetById(imageAssetId);
-      } catch (cleanupErr) {
+    for (const assetId of allAssetIds) {
+      try { await deleteAssetById(assetId); } catch (cleanupErr) {
         console.warn('Cleanup of uploaded asset failed:', cleanupErr);
       }
     }
@@ -106,20 +116,33 @@ export async function create(req: Request, res: Response): Promise<void> {
 
 export async function update(req: Request, res: Response): Promise<void> {
   const imageAssetId = req.body.imageAssetId as string | undefined;
+  const cardImageAssetId = req.body.cardImageAssetId as string | undefined;
+  const cardImageHoverAssetId = req.body.cardImageHoverAssetId as string | undefined;
   let imageUrl: string | undefined = req.body.image;
+  let cardImageUrl: string | undefined = req.body.cardImage;
+  let cardImageHoverUrl: string | undefined = req.body.cardImageHover;
+
+  await connectToDatabase();
 
   if (imageAssetId) {
-    await connectToDatabase();
     const asset = await Asset.findById(imageAssetId);
-    if (!asset) {
-      res.status(400).json({ success: false, error: 'Invalid imageAssetId' });
-      return;
-    }
+    if (!asset) { res.status(400).json({ success: false, error: 'Invalid imageAssetId' }); return; }
     imageUrl = asset.url;
   }
+  if (cardImageAssetId) {
+    const asset = await Asset.findById(cardImageAssetId);
+    if (!asset) { res.status(400).json({ success: false, error: 'Invalid cardImageAssetId' }); return; }
+    cardImageUrl = asset.url;
+  }
+  if (cardImageHoverAssetId) {
+    const asset = await Asset.findById(cardImageHoverAssetId);
+    if (!asset) { res.status(400).json({ success: false, error: 'Invalid cardImageHoverAssetId' }); return; }
+    cardImageHoverUrl = asset.url;
+  }
+
+  const allAssetIds = [imageAssetId, cardImageAssetId, cardImageHoverAssetId].filter(Boolean) as string[];
 
   try {
-    await connectToDatabase();
     const { name, description, isActive, displayOrder, filters } = req.body;
 
     const updateData: Partial<ICategory> = {};
@@ -129,6 +152,8 @@ export async function update(req: Request, res: Response): Promise<void> {
     }
     if (description !== undefined) updateData.description = description;
     if (imageUrl !== undefined) updateData.image = imageUrl;
+    if (cardImageUrl !== undefined) updateData.cardImage = cardImageUrl;
+    if (cardImageHoverUrl !== undefined) updateData.cardImageHover = cardImageHoverUrl;
     if (isActive !== undefined) updateData.isActive = isActive;
     if (displayOrder !== undefined) updateData.displayOrder = displayOrder;
     if (filters !== undefined) updateData.filters = filters;
@@ -143,19 +168,14 @@ export async function update(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    if (imageAssetId) {
-      await Asset.findByIdAndUpdate(imageAssetId, {
-        refType: 'Category',
-        refId: category._id,
-      });
+    for (const assetId of allAssetIds) {
+      await Asset.findByIdAndUpdate(assetId, { refType: 'Category', refId: category._id });
     }
 
     res.json({ success: true, data: category });
   } catch (error: unknown) {
-    if (imageAssetId) {
-      try {
-        await deleteAssetById(imageAssetId);
-      } catch (cleanupErr) {
+    for (const assetId of allAssetIds) {
+      try { await deleteAssetById(assetId); } catch (cleanupErr) {
         console.warn('Cleanup of uploaded asset failed:', cleanupErr);
       }
     }

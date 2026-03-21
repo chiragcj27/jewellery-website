@@ -150,7 +150,7 @@ export default function Home() {
       <FeaturedBanner heading="" imageUrl="https://jewellery-website.s3.ap-south-1.amazonaws.com/assets/NEry58alFs3L4IYu.png" />
       <ImageCaraousel />
       <FeaturedBanner heading="Request your custom design" imageUrl="https://jewellery-website.s3.ap-south-1.amazonaws.com/assets/DrKF_ofE2aKQPEUi.png" />
-      <section className="container mx-auto px-4 py-8 sm:py-10 md:py-12">
+      <section id="featured-products" className="container mx-auto px-4 py-8 sm:py-10 md:py-12">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-6 sm:mb-8 md:mb-10">Featured Products</h2>
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
           {SAMPLE_PRODUCTS.map((product) => (
@@ -180,7 +180,7 @@ export default function Home() {
       </section>
 
       {/* About Us & Store Section */}
-      <section className="w-full bg-[#f5f0e6] py-12 sm:py-16 md:py-20">
+      <section id="about-us" className="w-full bg-[#f5f0e6] py-12 sm:py-16 md:py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10 sm:mb-14">
             <p className="text-[10px] sm:text-xs uppercase tracking-[0.35em] text-black/40 mb-3 font-bold">
@@ -223,7 +223,7 @@ export default function Home() {
                   </div>
                   <div>
                     <p className="text-xs uppercase tracking-wider text-black/50 font-semibold mb-1">Address</p>
-                    <p className="text-xs sm:text-sm text-black/70 leading-relaxed">Soni Ramniklal Jewellers, Bindal Complex, Gorelal Square, Gondia</p>
+                    <p className="text-xs sm:text-sm text-black/70 leading-relaxed">Soni Ramniklal Jewellers, Bindal Complex, Gorelal Square, Gondia, Maharashtra, 441601</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -234,7 +234,7 @@ export default function Home() {
                   </div>
                   <div>
                     <p className="text-xs uppercase tracking-wider text-black/50 font-semibold mb-1">Contact</p>
-                    <a href="tel:7030995738" className="text-xs sm:text-sm text-black/70 hover:text-black transition-colors">7030995738</a>
+                    <a href="tel:+917030995738" className="text-xs sm:text-sm text-black/70 hover:text-black transition-colors">+91 7030995738</a>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">

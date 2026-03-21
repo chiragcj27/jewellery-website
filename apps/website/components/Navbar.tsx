@@ -9,18 +9,19 @@ import { useWishlistStore } from "@/store/wishlistStore";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 
-interface CategoryNavItem {
-  _id: string;
-  name: string;
-  slug: string;
-  isActive?: boolean;
-  displayOrder?: number;
-}
+const WHATSAPP_MESSAGES = {
+  monthlyDeposit: encodeURIComponent(
+    "Hi! I'm interested in the Monthly Deposit Scheme at The Swarnorra by Soni Ramniklal Jewellers. Could you please share more details about the scheme, its benefits, and how I can enroll?"
+  ),
+  productCustomization: encodeURIComponent(
+    "Hi! I'd like to enquire about Product Customization at The Swarnorra by Soni Ramniklal Jewellers. I have a design in mind and would love to discuss the options, pricing, and timeline."
+  ),
+};
 
 export default function Navbar() {
   const { user, logout, isWholesaler } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [categories, setCategories] = useState<CategoryNavItem[]>([]);
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   // useSyncExternalStore avoids hydration mismatch: server snapshot is 0, client uses persisted cart.
   const cartItemCount = useSyncExternalStore(
@@ -35,30 +36,20 @@ export default function Navbar() {
   );
 
   useEffect(() => {
-    let isMounted = true;
-
-    api.categories
-      .getAll()
-      .then((result) => {
-        if (!isMounted) return;
-        if (result?.success && Array.isArray(result.data)) {
-          const activeSorted = [...result.data]
-            .filter((category: CategoryNavItem) => category.isActive !== false)
-            .sort(
-              (a: CategoryNavItem, b: CategoryNavItem) =>
-                (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
-            );
-          setCategories(activeSorted);
-        }
+    api.siteSettings
+      .get()
+      .then((res: Record<string, unknown>) => {
+        const num =
+          (res?.whatsappEnquiryNumber as string)
+            ?.trim?.()
+            ?.replace(/^\+/, "") || "";
+        setWhatsappNumber(num.replace(/\D/g, ""));
       })
-      .catch((error) => {
-        console.error("Error fetching categories for navbar:", error);
-      });
-
-    return () => {
-      isMounted = false;
-    };
+      .catch(() => {});
   }, []);
+
+  const getWhatsAppUrl = (message: string) =>
+    `https://wa.me/${whatsappNumber}?text=${message}`;
 
   return (
     <>
@@ -307,63 +298,33 @@ export default function Navbar() {
       <div className={`border-t border-gray-200 ${isMobileMenuOpen ? 'block' : 'hidden lg:block'}`}>
         <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-start lg:justify-center gap-3 sm:gap-4 lg:gap-6 xl:gap-8 flex-wrap">
-            {categories.length > 0 ? (
-              categories.map((category) => (
-                <NavLink
-                  key={category._id}
-                  href={`/category/${category.slug}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <span className="text-sm sm:text-base font-semibold">
-                    {category.name}
-                  </span>
-                </NavLink>
-              ))
-            ) : (
-              <>
-                <NavLink href="/22kt-ready" onClick={() => setIsMobileMenuOpen(false)}>
-                  <span className="text-sm sm:text-base font-semibold">22KT Ready</span>
-                </NavLink>
-                <NavLink href="/18kt-ready" onClick={() => setIsMobileMenuOpen(false)}>
-                  <span className="text-sm sm:text-base font-semibold">18KT Ready</span>
-                </NavLink>
-                <NavLink href="/9kt-ready" onClick={() => setIsMobileMenuOpen(false)}>
-                  <span className="text-sm sm:text-base font-semibold">9KT Ready</span>
-                </NavLink>
-                <NavLink href="/22kt-order" onClick={() => setIsMobileMenuOpen(false)}>
-                  <span className="text-sm sm:text-base font-semibold">22KT Order</span>
-                </NavLink>
-                <NavLink href="/18kt-order" onClick={() => setIsMobileMenuOpen(false)}>
-                  <span className="text-sm sm:text-base font-semibold">18KT Order</span>
-                </NavLink>
-                <NavLink href="/20kt-order" onClick={() => setIsMobileMenuOpen(false)}>
-                  <span className="text-sm sm:text-base font-semibold">20KT Order</span>
-                </NavLink>
-                <NavLink href="/14kt-9kt-order" onClick={() => setIsMobileMenuOpen(false)}>
-                  <span className="text-sm sm:text-base font-semibold">
-                    14KT &amp; 9KT Order
-                  </span>
-                </NavLink>
-                <NavLink href="/silver-ready" onClick={() => setIsMobileMenuOpen(false)}>
-                  <span className="text-sm sm:text-base font-semibold">
-                    Silver Ready
-                  </span>
-                </NavLink>
-                <NavLink href="/platinum-order" onClick={() => setIsMobileMenuOpen(false)}>
-                  <span className="text-sm sm:text-base font-semibold">
-                    Platinum Order
-                  </span>
-                </NavLink>
-                <NavLink href="/lab-grown-order" onClick={() => setIsMobileMenuOpen(false)}>
-                  <span className="text-sm sm:text-base font-semibold">
-                    Lab Grown Order
-                  </span>
-                </NavLink>
-                <NavLink href="/coins" onClick={() => setIsMobileMenuOpen(false)}>
-                  <span className="text-sm sm:text-base font-semibold">Coins</span>
-                </NavLink>
-              </>
-            )}
+            <NavLink href="/" onClick={() => setIsMobileMenuOpen(false)}>
+              Home
+            </NavLink>
+            <NavLink href="/#featured-products" onClick={() => setIsMobileMenuOpen(false)}>
+              Featured Products
+            </NavLink>
+            <a
+              href={getWhatsAppUrl(WHATSAPP_MESSAGES.monthlyDeposit)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-sm font-semibold text-black hover:opacity-70 transition-opacity whitespace-nowrap py-1 lg:py-0"
+            >
+              Monthly Deposit Scheme
+            </a>
+            <a
+              href={getWhatsAppUrl(WHATSAPP_MESSAGES.productCustomization)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-sm font-semibold text-black hover:opacity-70 transition-opacity whitespace-nowrap py-1 lg:py-0"
+            >
+              Product Customization Enquiry
+            </a>
+            <NavLink href="/#about-us" onClick={() => setIsMobileMenuOpen(false)}>
+              About Us
+            </NavLink>
           </div>
         </div>
       </div>
@@ -377,7 +338,7 @@ function NavLink({ href, children, onClick }: { href: string; children: React.Re
     <a
       href={href}
       onClick={onClick}
-      className="text-sm font-medium text-black hover:opacity-70 transition-opacity whitespace-nowrap py-1 lg:py-0"
+      className="text-sm font-semibold text-black hover:opacity-70 transition-opacity whitespace-nowrap py-1 lg:py-0"
     >
       {children}
     </a>

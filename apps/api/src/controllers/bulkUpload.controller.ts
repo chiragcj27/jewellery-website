@@ -125,7 +125,7 @@ async function validateRow(
   row: ExcelRow,
   rowIndex: number,
   categoriesMap: Map<string, string>,
-  subcategoriesMap: Map<string, { id: string; categoryId: string }>
+  subcategoriesMap: Map<string, Array<{ id: string; categoryId: string }>>
 ): Promise<ValidationError[]> {
   const errors: ValidationError[] = [];
 
@@ -156,8 +156,8 @@ async function validateRow(
     errors.push({ row: rowIndex, field: 'subcategory', message: 'Subcategory is required' });
   } else {
     const subcategoryName = String(row.subcategory).trim();
-    const subcategoryData = subcategoriesMap.get(subcategoryName.toLowerCase());
-    if (!subcategoryData) {
+    const subcategoryCandidates = subcategoriesMap.get(subcategoryName.toLowerCase()) || [];
+    if (subcategoryCandidates.length === 0) {
       errors.push({
         row: rowIndex,
         field: 'subcategory',
@@ -167,7 +167,10 @@ async function validateRow(
     } else if (row.category) {
       // Validate that subcategory belongs to the specified category
       const categoryId = categoriesMap.get(String(row.category).trim().toLowerCase());
-      if (categoryId && subcategoryData.categoryId !== categoryId) {
+      const hasCategoryMatch = categoryId
+        ? subcategoryCandidates.some((candidate) => candidate.categoryId === categoryId)
+        : true;
+      if (categoryId && !hasCategoryMatch) {
         errors.push({
           row: rowIndex,
           field: 'subcategory',
@@ -380,16 +383,16 @@ export async function bulkUpload(req: Request, res: Response): Promise<void> {
       categoriesMap.set(cat.slug.toLowerCase(), cat._id.toString());
     });
 
-    const subcategoriesMap = new Map<string, { id: string; categoryId: string }>();
+    const subcategoriesMap = new Map<string, Array<{ id: string; categoryId: string }>>();
     subcategories.forEach((sub) => {
-      subcategoriesMap.set(sub.name.toLowerCase(), {
+      const subcategoryData = {
         id: sub._id.toString(),
         categoryId: sub.category.toString(),
-      });
-      subcategoriesMap.set(sub.slug.toLowerCase(), {
-        id: sub._id.toString(),
-        categoryId: sub.category.toString(),
-      });
+      };
+      const nameKey = sub.name.toLowerCase();
+      const slugKey = sub.slug.toLowerCase();
+      subcategoriesMap.set(nameKey, [...(subcategoriesMap.get(nameKey) || []), subcategoryData]);
+      subcategoriesMap.set(slugKey, [...(subcategoriesMap.get(slugKey) || []), subcategoryData]);
     });
 
     // Validate all rows first
@@ -426,7 +429,12 @@ export async function bulkUpload(req: Request, res: Response): Promise<void> {
         const categoryName = String(row.category).trim();
         const subcategoryName = String(row.subcategory).trim();
         const categoryId = categoriesMap.get(categoryName.toLowerCase())!;
-        const subcategoryId = subcategoriesMap.get(subcategoryName.toLowerCase())!.id;
+        const subcategoryCandidates = subcategoriesMap.get(subcategoryName.toLowerCase()) || [];
+        const matchingSubcategory = subcategoryCandidates.find((candidate) => candidate.categoryId === categoryId);
+        if (!matchingSubcategory) {
+          throw new Error(`Subcategory "${subcategoryName}" does not belong to category "${categoryName}"`);
+        }
+        const subcategoryId = matchingSubcategory.id;
 
         // Process images
         const imageStrings = parseImages(row.images);

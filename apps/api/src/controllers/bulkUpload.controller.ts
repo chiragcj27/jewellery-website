@@ -122,6 +122,15 @@ function parseFilterValues(value: string | undefined): Record<string, string | s
   }
 }
 
+function getObjectName(value: unknown): string {
+  if (typeof value !== 'object' || value === null || !('name' in value)) {
+    return '';
+  }
+
+  const namedValue = value as { name?: unknown };
+  return typeof namedValue.name === 'string' ? namedValue.name : '';
+}
+
 /**
  * Check if a string is a URL
  */
@@ -314,7 +323,7 @@ export async function bulkUpload(req: Request, res: Response): Promise<void> {
     }
 
     let rows: ExcelRow[] = [];
-    let imageFilesMap = new Map<string, Buffer>(); // filename -> buffer
+    const imageFilesMap = new Map<string, Buffer>(); // filename -> buffer
 
     // Check if uploaded file is a ZIP
     const isZip = req.file.mimetype === 'application/zip' || 
@@ -621,7 +630,7 @@ export async function downloadTemplate(_req: Request, res: Response): Promise<vo
         name: 'Example Product Name',
         sku: 'PROD-001',
         category: categories.length > 0 ? categories[0].name : 'Rings',
-        subcategory: subcategories.length > 0 ? (subcategories[0] as any).name : 'Gold Rings',
+        subcategory: subcategories.length > 0 ? getObjectName(subcategories[0]) || 'Gold Rings' : 'Gold Rings',
         description: 'Detailed product description',
         sizeLength: '7 inches',
         price: 99.99,
@@ -646,7 +655,7 @@ export async function downloadTemplate(_req: Request, res: Response): Promise<vo
         name: 'Gold Chain (No Diamond)',
         sku: 'PROD-002',
         category: categories.length > 0 ? categories[0].name : 'Chains',
-        subcategory: subcategories.length > 0 ? (subcategories[0] as any).name : 'Gold Chains',
+        subcategory: subcategories.length > 0 ? getObjectName(subcategories[0]) || 'Gold Chains' : 'Gold Chains',
         description: 'Plain gold chain',
         sizeLength: '18 inches',
         price: 45000,
@@ -690,7 +699,7 @@ export async function downloadTemplate(_req: Request, res: Response): Promise<vo
         Type: 'Subcategory',
         Name: sub.name,
         Slug: sub.slug,
-        Category: typeof sub.category === 'object' ? (sub.category as any).name : '',
+        Category: getObjectName(sub.category),
       });
     });
 

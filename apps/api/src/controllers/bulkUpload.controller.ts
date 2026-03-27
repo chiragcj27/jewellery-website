@@ -83,6 +83,22 @@ function parseNumber(value: unknown): number | undefined {
 }
 
 /**
+ * Parse percentage values from Excel.
+ * Excel may provide percentage-formatted cells as fractions (e.g. 9.5% -> 0.095).
+ */
+function parsePercentage(value: unknown): number | undefined {
+  const parsed = parseNumber(value);
+  if (parsed === undefined) return undefined;
+
+  // Normalize fraction to human percentage for percentage-formatted numeric cells.
+  if (typeof value === 'number' && parsed > 0 && parsed <= 1) {
+    return parsed * 100;
+  }
+
+  return parsed;
+}
+
+/**
  * Parse images string to array
  */
 function parseImages(value: string | undefined): string[] {
@@ -236,7 +252,7 @@ async function validateRow(
     });
   }
 
-  const wastagePercentage = parseNumber(row.wastagePercentage);
+  const wastagePercentage = parsePercentage(row.wastagePercentage);
   if (wastagePercentage !== undefined && wastagePercentage < 0) {
     errors.push({
       row: rowIndex,
@@ -246,7 +262,7 @@ async function validateRow(
     });
   }
 
-  const makingChargesPercentage = parseNumber(row.makingChargesPercentage);
+  const makingChargesPercentage = parsePercentage(row.makingChargesPercentage);
   if (makingChargesPercentage !== undefined && makingChargesPercentage < 0) {
     errors.push({
       row: rowIndex,
@@ -522,8 +538,8 @@ export async function bulkUpload(req: Request, res: Response): Promise<void> {
           filterValues: parseFilterValues(row.filterValues),
           weightInGrams: parseNumber(row.weightInGrams),
           metalType: row.metalType ? String(row.metalType).trim() : undefined,
-          wastagePercentage: parseNumber(row.wastagePercentage),
-          makingChargesPercentage: parseNumber(row.makingChargesPercentage),
+          wastagePercentage: parsePercentage(row.wastagePercentage),
+          makingChargesPercentage: parsePercentage(row.makingChargesPercentage),
           useDynamicPricing: row.useDynamicPricing !== undefined ? parseBoolean(row.useDynamicPricing) : false,
           hasStone: row.hasStone !== undefined ? parseBoolean(row.hasStone) : false,
           stoneName: row.stoneName ? String(row.stoneName).trim() : undefined,

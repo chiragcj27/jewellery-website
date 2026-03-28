@@ -10,7 +10,7 @@ import { useAuth } from "@/context/AuthProvider";
 
 import { api } from "@/lib/api";
 import { getDisplayPrice, formatPrice, calculatePrice } from "@/lib/priceCalculator";
-import type { MetalRateData, PriceBreakdown } from "@/lib/priceCalculator";
+import type { MetalRateData } from "@/lib/priceCalculator";
 
 interface ApiProduct {
   _id: string;
@@ -144,7 +144,7 @@ export default function ProductPageBySku() {
     );
   }
 
-  const displayPrice = getDisplayPrice(
+  const displaySubtotal = getDisplayPrice(
     {
       price: product.price,
       useDynamicPricing: product.useDynamicPricing ?? false,
@@ -158,13 +158,71 @@ export default function ProductPageBySku() {
     },
     metalRates
   );
-  const rawPrice = displayPrice ?? product.price ?? 0;
-  const discountAmt = discountPercentage > 0 ? Math.round(rawPrice * discountPercentage / 100 * 100) / 100 : 0;
-  const priceToShow = Math.round((rawPrice - discountAmt) * 100) / 100;
+
+  // Cart pricing in this app treats `item.price` as "subtotal (pre-GST)".
+  // For the product page, we display the GST-inclusive grand total.
+  const rateForDynamicPricing =
+    product.useDynamicPricing &&
+    product.weightInGrams != null &&
+    product.metalType
+      ? metalRates.find((r) => r.metalType === product.metalType)
+      : undefined;
+
+  let cartPriceToShow = 0; // stored in cart (pre-GST)
+  let displayGrandTotalToShow = 0; // shown on product page (GST-inclusive)
+  let preDiscountDisplayGrandTotal: number | null = null; // used for line-through when no compareAt price
+
+  if (rateForDynamicPricing && product.weightInGrams != null) {
+    const breakdown = calculatePrice(
+      product.weightInGrams,
+      rateForDynamicPricing,
+      product.makingChargesPercentage,
+      {
+        hasStone: product.hasStone,
+        stoneName: product.stoneName,
+        stoneWeight: product.stoneWeight,
+        stoneValue: product.stoneValue,
+      }
+    );
+
+    const rawSubtotal = breakdown.subtotal; // pre-GST subtotal
+    const rawGst = Math.round(rawSubtotal * rateForDynamicPricing.gstPercentage / 100 * 100) / 100;
+    const rawGrandTotal = Math.round((rawSubtotal + rawGst) * 100) / 100;
+
+    const discountAmt = discountPercentage > 0
+      ? Math.round(rawSubtotal * discountPercentage / 100 * 100) / 100
+      : 0;
+
+    const discountedSubtotal = Math.round((rawSubtotal - discountAmt) * 100) / 100;
+    const discountedGst = Math.round(discountedSubtotal * rateForDynamicPricing.gstPercentage / 100 * 100) / 100;
+    const grandTotal = Math.round((discountedSubtotal + discountedGst) * 100) / 100;
+
+    cartPriceToShow = discountedSubtotal;
+    displayGrandTotalToShow = grandTotal;
+    preDiscountDisplayGrandTotal = rawGrandTotal;
+  } else {
+    const rawSubtotal = displaySubtotal ?? product.price ?? 0; // pre-GST subtotal
+    const discountAmt = discountPercentage > 0 ? Math.round(rawSubtotal * discountPercentage / 100 * 100) / 100 : 0;
+    cartPriceToShow = Math.round((rawSubtotal - discountAmt) * 100) / 100;
+    displayGrandTotalToShow = cartPriceToShow;
+    preDiscountDisplayGrandTotal = rawSubtotal;
+  }
+
   const compareAt = product.compareAtPrice ?? undefined;
-  const savings = calculateDiscount(priceToShow, compareAt);
-  const currentPriceStr = formatPrice(priceToShow);
-  const mrpStr = compareAt != null ? formatPrice(compareAt) : (discountPercentage > 0 ? formatPrice(rawPrice) : null);
+  const effectiveCompareAt =
+    compareAt != null && rateForDynamicPricing
+      ? Math.round(
+          (compareAt +
+            Math.round(compareAt * rateForDynamicPricing.gstPercentage / 100 * 100) / 100) *
+            100
+        ) / 100
+      : compareAt;
+
+  const savings = calculateDiscount(displayGrandTotalToShow, effectiveCompareAt);
+  const currentPriceStr = formatPrice(displayGrandTotalToShow);
+  const mrpStr = effectiveCompareAt != null
+    ? formatPrice(effectiveCompareAt)
+    : (discountPercentage > 0 && preDiscountDisplayGrandTotal != null ? formatPrice(preDiscountDisplayGrandTotal) : null);
 
   const showWholesalerView =
     isWholesaler && (product.metalType != null || product.weightInGrams != null);
@@ -223,8 +281,8 @@ export default function ProductPageBySku() {
         id: cartItemId,
         title: product.name,
         image: product.images?.[0] ?? "",
-        price: priceToShow,
-        mrp: compareAt ?? priceToShow,
+        price: cartPriceToShow,
+        mrp: compareAt ?? cartPriceToShow,
         sku: baseSku,
         selectedMetalColor: selectedMetalColor || undefined,
         selectedSizeLength: selectedSizeLength || undefined,
@@ -421,8 +479,8 @@ export default function ProductPageBySku() {
                         id: productSku,
                         title: product.name,
                         image: product.images?.[0] ?? "",
-                        price: priceToShow,
-                        mrp: compareAt ?? priceToShow,
+                        price: cartPriceToShow,
+                        mrp: compareAt ?? cartPriceToShow,
                         sku: productSku,
                         slug: productSku,
                       });

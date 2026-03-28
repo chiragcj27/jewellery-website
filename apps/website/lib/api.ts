@@ -104,15 +104,22 @@ export const api = {
       }).then((res) => res.json()),
   },
   products: {
-    getAll: (categoryId?: string, subcategoryId?: string) => {
+    getAll: (
+      categoryId?: string,
+      subcategoryId?: string,
+      opts?: { featured?: boolean; page?: number; limit?: number }
+    ) => {
       const params = new URLSearchParams();
       if (categoryId) params.append('categoryId', categoryId);
       if (subcategoryId) params.append('subcategoryId', subcategoryId);
+      if (opts?.featured) params.append('featured', 'true');
+      if (opts?.page != null) params.append('page', String(opts.page));
+      if (opts?.limit != null) params.append('limit', String(opts.limit));
       const query = params.toString();
-      const url = query 
+      const url = query
         ? `${API_BASE_URL}/api/products?${query}`
         : `${API_BASE_URL}/api/products`;
-      return fetch(url).then(res => res.json());
+      return fetch(url).then((res) => res.json());
     },
     getById: (id: string) => fetch(`${API_BASE_URL}/api/products/${id}`).then(res => res.json()),
     getBySku: (sku: string) => fetch(`${API_BASE_URL}/api/products/sku/${encodeURIComponent(sku)}`).then(res => res.json()),

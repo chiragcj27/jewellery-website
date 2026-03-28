@@ -138,10 +138,17 @@ export const api = {
     }).then(res => res.json()),
   },
   products: {
-    getAll: (opts?: { categoryId?: string; subcategoryId?: string; page?: number; limit?: number }) => {
+    getAll: (opts?: {
+      categoryId?: string;
+      subcategoryId?: string;
+      search?: string;
+      page?: number;
+      limit?: number;
+    }) => {
       const params = new URLSearchParams();
       if (opts?.categoryId) params.append('categoryId', opts.categoryId);
       if (opts?.subcategoryId) params.append('subcategoryId', opts.subcategoryId);
+      if (opts?.search?.trim()) params.append('search', opts.search.trim());
       if (opts?.page) params.append('page', String(opts.page));
       if (opts?.limit) params.append('limit', String(opts.limit));
       const query = params.toString();

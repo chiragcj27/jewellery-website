@@ -10,24 +10,40 @@ export async function getAll(req: Request, res: Response): Promise<void> {
     await connectToDatabase();
     const categoryId = req.query.categoryId as string;
     const subcategoryId = req.query.subcategoryId as string;
+    const searchRaw = String(req.query.search || '').trim();
 
-    const query: Partial<IProduct> = {};
+    const query: mongoose.FilterQuery<IProduct> = {};
     if (categoryId) query.category = new mongoose.Types.ObjectId(categoryId);
     if (subcategoryId) query.subcategory = new mongoose.Types.ObjectId(subcategoryId);
+
+    const featuredOnly = String(req.query.featured || '').toLowerCase() === 'true';
+    if (featuredOnly) {
+      query.isFeatured = true;
+    }
+
+    if (searchRaw) {
+      const esc = searchRaw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query.$or = [
+        { name: { $regex: esc, $options: 'i' } },
+        { sku: { $regex: esc, $options: 'i' } },
+        { slug: { $regex: esc, $options: 'i' } },
+        { description: { $regex: esc, $options: 'i' } },
+      ];
+    }
 
     const page = Math.max(1, parseInt(String(req.query.page || '1'), 10));
     const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit || '50'), 10)));
     const skip = (page - 1) * limit;
 
     const [products, totalCount] = await Promise.all([
-      Product.find(query as mongoose.FilterQuery<IProduct>)
+      Product.find(query)
         .populate('category', 'name slug')
         .populate('subcategory', 'name slug')
         .sort({ displayOrder: 1, createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      Product.countDocuments(query as mongoose.FilterQuery<IProduct>),
+      Product.countDocuments(query),
     ]);
 
     res.json({ success: true, data: products, totalCount, page, limit });

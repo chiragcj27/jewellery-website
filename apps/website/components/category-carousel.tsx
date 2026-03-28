@@ -27,7 +27,7 @@ export default function CategoryCarousel({ categories }: CategoryCarouselProps) 
         alt={category.label}
         fill
         className="object-cover transition-opacity duration-300 group-hover:opacity-0"
-        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+        sizes="(max-width: 640px) 50vw, 25vw"
       />
       {category.hoverImage && (
         <Image
@@ -35,15 +35,15 @@ export default function CategoryCarousel({ categories }: CategoryCarouselProps) 
           alt={category.label}
           fill
           className="object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          sizes="(max-width: 640px) 50vw, 25vw"
         />
       )}
-      <div className="absolute inset-0 flex flex-col items-center justify-end pb-6 sm:pb-8 bg-linear-to-t from-black/60 via-transparent to-transparent">
-        <div className="w-16 h-px bg-white/90 mb-2 sm:mb-3" />
-        <span className="text-white uppercase tracking-wider font-semibold text-center px-3 text-sm sm:text-base md:text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+      <div className="absolute inset-0 flex flex-col items-center justify-end pb-3 sm:pb-4 bg-linear-to-t from-black/60 via-transparent to-transparent">
+        <div className="w-10 h-px bg-white/90 mb-1.5" />
+        <span className="text-white uppercase tracking-wider font-semibold text-center px-2 text-xs sm:text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
           {category.label}
         </span>
-        <div className="w-16 h-px bg-white/90 mt-2 sm:mt-3" />
+        <div className="w-10 h-px bg-white/90 mt-1.5" />
       </div>
     </div>
   );
@@ -51,7 +51,7 @@ export default function CategoryCarousel({ categories }: CategoryCarouselProps) 
   return (
     <div className="w-full py-6 sm:py-8 md:py-12 px-4 sm:px-6 md:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
           {categories.map((category, index) => {
             const content = (
               <CardContent

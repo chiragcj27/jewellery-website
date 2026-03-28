@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Banner from "@/components/banner";
 import CategoryCarousel from "@/components/category-carousel";
 import TopStylesSection from "@/components/top-styles-section";
@@ -10,6 +10,7 @@ import ImageCaraousel from "@/components/image-caraousel";
 import ProductCard from "@/components/product-card";
 import ShopWithConfidence from "@/components/shop-with-confidence";
 import { api } from "@/lib/api";
+import { formatPrice, getDisplayPrice, type MetalRateData } from "@/lib/priceCalculator";
 
 interface Category {
   _id: string;
@@ -28,77 +29,39 @@ function categoryPlaceholder(name: string): string {
   return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='533'%3E%3Crect fill='%23e5e5e5' width='400' height='533'/%3E%3Ctext fill='%23737373' font-family='sans-serif' font-size='28' font-weight='600' text-anchor='middle' dominant-baseline='middle' x='200' y='266'%3E${encoded}%3C/text%3E%3C/svg%3E`;
 }
 
-const SAMPLE_PRODUCTS = [
-  {
-    image: "https://palmonas.com/cdn/shop/files/PM-EARRINGS-037_1_0040.jpg?v=1744528665",
-    title: "Textured Gold Hoop Earrings",
-    currentPrice: "₹2,499",
-    originalPrice: "₹3,499",
-    discountLabel: "29% OFF",
-    offerTag: "Best Seller",
-  },
-  {
-    image: "https://palmonas.com/cdn/shop/files/PMWSTMR004-G-5_0040.jpg?v=1744515204",
-    title: "Minimal Gold Stacked Ring",
-    currentPrice: "₹1,899",
-    originalPrice: "₹2,499",
-    discountLabel: "24% OFF",
-    offerTag: "New Arrival",
-  },
-  {
-    image: "https://palmonas.com/cdn/shop/files/PMWSTMR010-G-5_0040.jpg?v=1749556121",
-    title: "Classic Gold Band Ring",
-    currentPrice: "₹2,199",
-    originalPrice: "₹2,999",
-    discountLabel: "27% OFF",
-    offerTag: "Limited Offer",
-  },
-  {
-    image: "https://palmonas.com/cdn/shop/files/PMWSTMR001-G-5.jpg?v=1744515205",
-    title: "Chunky Statement Ring",
-    currentPrice: "₹2,799",
-    originalPrice: "₹3,699",
-    discountLabel: "24% OFF",
-    offerTag: "Trending",
-  },
-  {
-    image: "https://palmonas.com/cdn/shop/files/NK-40_1_0040.jpg?v=1744524127",
-    title: "Layered Gold Necklace",
-    currentPrice: "₹3,499",
-    originalPrice: "₹4,499",
-    discountLabel: "22% OFF",
-    offerTag: "Bestseller",
-  },
-  {
-    image: "https://palmonas.com/cdn/shop/files/ER159_2_0040.jpg?v=1744526452",
-    title: "Crystal Drop Earrings",
-    currentPrice: "₹2,299",
-    originalPrice: "₹3,099",
-    discountLabel: "26% OFF",
-    offerTag: "Online Only",
-  },
-  {
-    image: "https://palmonas.com/cdn/shop/files/ER253_1_0040.jpg?v=1750244118",
-    title: "Everyday Gold Studs",
-    currentPrice: "₹1,499",
-    originalPrice: "₹1,999",
-    discountLabel: "25% OFF",
-    offerTag: "Editor's Pick",
-  },
-  {
-    image:
-      "https://palmonas.com/cdn/shop/files/Artboard14_2_5d4bfe2c-a7cd-4844-be10-2cb37cd8de6c.webp?v=1768896706",
-    title: "Textured Gold Chain Bracelet",
-    currentPrice: "₹2,599",
-    originalPrice: "₹3,299",
-    discountLabel: "21% OFF",
-    offerTag: "Just In",
-  },
-] as const;
+interface FeaturedProduct {
+  _id: string;
+  name: string;
+  slug: string;
+  sku?: string;
+  images: string[];
+  price: number;
+  compareAtPrice?: number;
+  isActive: boolean;
+  useDynamicPricing?: boolean;
+  weightInGrams?: number;
+  metalType?: string;
+  wastagePercentage?: number;
+  makingChargesPercentage?: number;
+  sizeLength?: string;
+}
+
+function discountLabel(
+  price: number | null | undefined,
+  compareAtPrice?: number
+): string | undefined {
+  if (price == null || !Number.isFinite(price)) return undefined;
+  if (!compareAtPrice || compareAtPrice <= price) return undefined;
+  const discount = Math.round(((compareAtPrice - price) / compareAtPrice) * 100);
+  return `${discount}% OFF`;
+}
 
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
+  const [metalRates, setMetalRates] = useState<MetalRateData[]>([]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -117,6 +80,60 @@ export default function Home() {
     };
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    const loadMetalRates = async () => {
+      try {
+        const res = (await api.metalRates.getAll(true)) as {
+          success?: boolean;
+          data?: MetalRateData[];
+        };
+        if (res.success && Array.isArray(res.data)) setMetalRates(res.data);
+      } catch {
+        /* fixed-price products still render */
+      }
+    };
+    loadMetalRates();
+  }, []);
+
+  useEffect(() => {
+    const loadFeatured = async () => {
+      setLoadingFeatured(true);
+      try {
+        const res = (await api.products.getAll(undefined, undefined, {
+          featured: true,
+          limit: 16,
+        })) as { success?: boolean; data?: FeaturedProduct[] };
+        if (res.success && Array.isArray(res.data)) {
+          setFeaturedProducts(res.data.filter((p) => p.isActive));
+        }
+      } catch (err) {
+        console.error("Error fetching featured products:", err);
+      } finally {
+        setLoadingFeatured(false);
+      }
+    };
+    loadFeatured();
+  }, []);
+
+  const featuredProductCards = useMemo(
+    () =>
+      featuredProducts.map((p) => {
+        const displayPrice =
+          getDisplayPrice(
+            {
+              price: p.price,
+              useDynamicPricing: p.useDynamicPricing ?? false,
+              weightInGrams: p.weightInGrams,
+              metalType: p.metalType,
+              makingChargesPercentage: p.makingChargesPercentage,
+            },
+            metalRates
+          ) ?? p.price;
+        return { p, displayPrice };
+      }),
+    [featuredProducts, metalRates]
+  );
 
   // Map API categories to the shape CategoryCarousel expects
   const carouselCategories = categories.map((cat) => ({
@@ -171,19 +188,53 @@ export default function Home() {
       <FeaturedBanner heading="Request your custom design" imageUrl="https://jewellery-website.s3.ap-south-1.amazonaws.com/assets/DrKF_ofE2aKQPEUi.png" />
       <section id="featured-products" className="container mx-auto px-4 py-8 sm:py-10 md:py-12">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-6 sm:mb-8 md:mb-10">Featured Products</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
-          {SAMPLE_PRODUCTS.map((product) => (
-            <ProductCard
-              key={product.title}
-              image={product.image}
-              title={product.title}
-              currentPrice={product.currentPrice}
-              originalPrice={product.originalPrice}
-              discountLabel={product.discountLabel}
-              offerTag={product.offerTag}
-            />
-          ))}
-        </div>
+        {loadingFeatured ? (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
+            {Array.from({ length: 8 }).map((_, idx) => (
+              <div
+                key={idx}
+                className="flex flex-col bg-white border border-gray-200 shadow-sm animate-pulse min-w-0"
+              >
+                <div className="relative aspect-4/5 bg-gray-200" />
+                <div className="px-2 sm:px-3 pt-2 sm:pt-3 pb-3 sm:pb-4 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-5/6" />
+                  <div className="h-4 bg-gray-200 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : featuredProductCards.length === 0 ? (
+          <div className="flex justify-center py-12">
+            <p className="text-gray-500 text-sm text-center max-w-md">
+              No featured products yet. Mark products as featured in the admin catalog to show them here.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
+            {featuredProductCards.map(({ p, displayPrice }) => (
+              <ProductCard
+                key={p._id}
+                image={p.images?.[0] || ""}
+                title={p.name}
+                currentPrice={formatPrice(displayPrice)}
+                originalPrice={
+                  p.compareAtPrice != null ? formatPrice(p.compareAtPrice) : undefined
+                }
+                discountLabel={discountLabel(displayPrice, p.compareAtPrice)}
+                offerTag="Featured"
+                sku={p.sku}
+                metalType={p.metalType}
+                weightInGrams={p.weightInGrams}
+                wastagePercentage={p.wastagePercentage}
+                makingChargesPercentage={p.makingChargesPercentage}
+                sizeLength={p.sizeLength}
+                price={displayPrice}
+                mrp={p.compareAtPrice ?? undefined}
+                slug={p.slug}
+              />
+            ))}
+          </div>
+        )}
       </section>
       <section>
         <div className="relative w-full h-[300px] sm:h-[400px] md:h-[520px] lg:h-[600px] xl:h-[720px]">

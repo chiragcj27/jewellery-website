@@ -98,8 +98,15 @@ export function calculatePrice(
 /**
  * Format price for display
  */
-export function formatPrice(price: number, currency: string = '₹'): string {
-  return `${currency}${price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+export function formatPrice(
+  price: number | null | undefined,
+  currency: string = '₹'
+): string {
+  const n = price == null ? NaN : Number(price);
+  if (!Number.isFinite(n)) {
+    return `${currency}—`;
+  }
+  return `${currency}${n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 /**

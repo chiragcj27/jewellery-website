@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import PreHeader from "./pre-header";
@@ -23,6 +23,8 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
   // useSyncExternalStore avoids hydration mismatch: server snapshot is 0, client uses persisted cart.
   const cartItemCount = useSyncExternalStore(
     (onStoreChange) => useCartStore.subscribe(onStoreChange),
@@ -46,6 +48,25 @@ export default function Navbar() {
         setWhatsappNumber(num.replace(/\D/g, ""));
       })
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const onPointerDown = (event: MouseEvent) => {
+      if (!profileMenuRef.current) return;
+      if (!profileMenuRef.current.contains(event.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsProfileMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, []);
 
   const getWhatsAppUrl = (message: string) =>
@@ -161,11 +182,14 @@ export default function Navbar() {
             )}
             {/* Profile / Account */}
             {user ? (
-              <div className="hidden sm:flex items-center gap-2">
-                <Link
-                  href="/auth"
+              <div className="relative" ref={profileMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsProfileMenuOpen((prev) => !prev)}
                   className="relative text-black hover:opacity-70 transition-opacity flex items-center gap-1.5"
-                  aria-label="Account"
+                  aria-haspopup="menu"
+                  aria-expanded={isProfileMenuOpen}
+                  aria-label="Profile menu"
                 >
                   <svg
                     className="w-5 h-5 sm:w-6 sm:h-6"
@@ -179,15 +203,56 @@ export default function Navbar() {
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                     <circle cx="12" cy="7" r="4" />
                   </svg>
-                  <span className="text-xs sm:text-sm font-medium hidden lg:inline truncate max-w-[100px]">{user.name}</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => logout()}
-                  className="text-[10px] sm:text-xs text-black/55 hover:text-black transition-colors"
-                >
-                  Log out
+                  <span className="text-xs sm:text-sm font-medium hidden sm:inline">Profile</span>
+                  <svg
+                    className={`w-3 h-3 transition-transform ${isProfileMenuOpen ? "rotate-180" : ""}`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
                 </button>
+
+                {isProfileMenuOpen && (
+                  <div
+                    className="absolute right-0 top-full mt-2 w-44 rounded-lg border border-black/10 bg-white shadow-lg py-1 z-50"
+                    role="menu"
+                    aria-label="Profile options"
+                  >
+                    <Link
+                      href="/auth"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                      className="block px-4 py-2.5 text-sm text-black hover:bg-black/5 transition-colors"
+                      role="menuitem"
+                    >
+                      My Profile
+                    </Link>
+                    <Link
+                      href="/orders"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                      className="block px-4 py-2.5 text-sm text-black hover:bg-black/5 transition-colors"
+                      role="menuitem"
+                    >
+                      My Orders
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        logout();
+                        setIsProfileMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-black hover:bg-black/5 transition-colors"
+                      role="menuitem"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <Link

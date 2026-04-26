@@ -26,8 +26,6 @@ export async function connectToDatabase(MONGODB_URI?: string): Promise<typeof mo
       maxPoolSize: 10,
     };
 
-    console.log('MONGODB_URI:', uri);
-
     const connection = await mongoose.connect(uri, options);
     cachedConnection = connection;
     
